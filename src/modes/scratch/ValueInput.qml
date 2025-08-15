@@ -7,6 +7,7 @@ Socket {
     id: root
     //property int valueType: ValueInput.Float
     property alias text: textInput.text
+    property Item focusEffectObject
     //property var value: next ? next.value() : textInput.text
     type: "value"
     visible: true
@@ -96,13 +97,18 @@ Socket {
             radius: height / 2
             border.color: block.borderColor
         }
-        onActiveFocusChanged: { if (activeFocus) { selectAll(); focusEffect.createObject(root) } }
+        onActiveFocusChanged: {
+            if (activeFocus) {
+                selectAll();
+                if (!focusEffectObject) focusEffectObject = focusEffect.createObject(root)
+            }
+        }
     }
     function value() {
         var value = next ? next.value() : textInput.text
         switch (state) {
-        case "int": value = parseInt(value); break;
-        case "double": value = parseFloat(value); break;
+        case "int": value = parseInt(value) || 0; break;
+        case "double": value = parseFloat(value) || 0; break;
         }
         return value
     }

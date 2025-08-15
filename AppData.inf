@@ -1,0 +1,7 @@
+#define OS            "Windows"
+#define RC_VERSION     2,0,0,0
+#define Version       "2.0.0.0"
+#define ProductName   "Hobots"
+#define Description   "Интерфейс управления роботами"
+#define CompanyName   "MES"
+#define Copyright     "Copyright ©MES 2025"

@@ -77,9 +77,8 @@ T.ComboBox {
     }*/
     popup: T.Popup {
         id: popup
-        //leftPadding: 1
-        //rightPadding: 1
-        x: (root.width * block.parent.scale - width) / block.parent.scale / 2
+        //x: (root.width * block.canvas.scale - width) / block.canvas.scale / 2
+        x: block.canvas ? (root.width * block.canvas.scale - width) / block.canvas.scale / 2 : 0
         y: root.height + 18
         padding: 6
         topPadding: y > 0 ? 18 : 6
@@ -102,20 +101,22 @@ T.ComboBox {
             id: font_metrics
             font: root.font
         }
-        //width: childrenRect.width
+        Q.NumberAnimation {
+            id: openAnimation
+            target: popup
+            property: "y"
+            from: root.height / 2; to: root.height + 18; duration: 200
+        }
+        onVisibleChanged: openAnimation.running = true
+        //Q.Behavior on height { Q.NumberAnimation { duration: 2000 } }
         contentItem: Q.ListView {
             id: listView
             clip: true
-            implicitHeight: contentHeight
+            //implicitHeight: contentHeight
             model: root.delegateModel
             currentIndex: root.highlightedIndex
             //populate: Q.Transition { Q.NumberAnimation { properties: "x,y"; duration: 100 } }
         }
-        /*background: Q.Rectangle {
-            color: block.fillColor
-            border.color: block.borderColor
-            radius: 6
-        }*/
         background: Shape {
             id: popup_bkg
             property real radius: 6

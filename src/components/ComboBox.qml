@@ -17,7 +17,7 @@ T.ComboBox {
         Q.Behavior on border.color { Q.ColorAnimation { duration: 100 } }
     }
     contentItem: Text {
-        leftPadding: 10
+        leftPadding: 12
         rightPadding: root.indicator.width + root.spacing
         text: root.displayText
         font: root.font
@@ -37,26 +37,6 @@ T.ComboBox {
         //source: "qrc:/qt-project.org/imports/QtQuick/Controls/Fusion/images/arrow.png"
         //source: "qrc:/qt-project.org/imports/QtQuick/Controls/Material/images/drop-indicator.png"
     }
-    /*indicator: Q.Canvas {
-        id: canvas
-        x: root.width - width - root.rightPadding
-        y: root.topPadding + (root.availableHeight - height) / 2
-        width: 13
-        height: 7
-        contextType: "2d"
-        Q.Connections {
-            target: root
-            function onPressedChanged() { canvas.requestPaint(); }
-        }
-        onPaint: {
-            context.reset();
-            context.strokeStyle = "#c8c8c8";
-            context.moveTo(0, 0)
-            context.lineTo((width - 1) / 2, height);
-            context.lineTo(width - 1, 0);
-            context.stroke();
-        }
-    }*/
     delegate: T.ItemDelegate {
         id: delegate
         required property var model
@@ -74,7 +54,7 @@ T.ComboBox {
                 Q.PropertyChanges {
                     target: highlight
                     color: "#145FA5"
-                    border.color: Style.brightWidgetBorderColor
+                    //border.color: Style.brightWidgetBorderColor
                 }
             }
             color: "transparent"
@@ -100,7 +80,6 @@ T.ComboBox {
             border.color: root.background.border.color
             radius: 15
         }
-        onVisibleChanged: if (visible && !root.delegateModel) visible = false
+        onVisibleChanged: if (visible && (!root.delegateModel || !root.delegateModel.count)) visible = false
     }
-    //model: ["Firstooooooooooooooooooooooooooo", "Second", "Third"]
 }

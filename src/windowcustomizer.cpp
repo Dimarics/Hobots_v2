@@ -17,28 +17,27 @@ WindowCustomizer::WindowCustomizer(QObject *parent) : QObject(parent), m_window(
 
 void WindowCustomizer::setWindow(QWindow *window)
 {
-    if (m_window != window) {
-        m_window = window;
-        if (window) {
-            HWND hWnd = (HWND)window->winId();
-            //DWM
-            //DWMNCRENDERINGPOLICY policy = DWMNCRP_DISABLED;
-            //DwmSetWindowAttribute(hWnd, DWMWA_NCRENDERING_POLICY, &policy, sizeof(policy));
-            /*MARGINS margins;
+    if (m_window == window) return;
+    m_window = window;
+    if (window) {
+        HWND hWnd = (HWND)window->winId();
+        //DWM
+        //DWMNCRENDERINGPOLICY policy = DWMNCRP_DISABLED;
+        //DwmSetWindowAttribute(hWnd, DWMWA_NCRENDERING_POLICY, &policy, sizeof(policy));
+        /*MARGINS margins;
             margins.cyTopHeight = margin;
             margins.cyBottomHeight = margin;
             margins.cxLeftWidth = margin;
             margins.cxRightWidth = margin;
             DwmExtendFrameIntoClientArea(hWnd, &margins);*/
-            //
-            WndProc = (WNDPROC)GetWindowLongPtr(hWnd, GWLP_WNDPROC);
-            SetWindowLongPtr(hWnd, GWLP_WNDPROC, (LONG_PTR)CustomizerWndProc);
-            //MoveWindow(hWnd, window->x(), window->y(), window->width(), window->height(), true);
-            //connect(window, &QWindow::widthChanged, this, [](int width){ qDebug() << width; });
-            //SetWindowsHookExA(WH_CALLWNDPROC, CallWndProc, NULL, NULL);
-        }
-        emit windowChanged();
+        //
+        WndProc = (WNDPROC)GetWindowLongPtr(hWnd, GWLP_WNDPROC);
+        SetWindowLongPtr(hWnd, GWLP_WNDPROC, (LONG_PTR)CustomizerWndProc);
+        //MoveWindow(hWnd, window->x(), window->y(), window->width(), window->height(), true);
+        //connect(window, &QWindow::widthChanged, this, [](int width){ qDebug() << width; });
+        //SetWindowsHookExA(WH_CALLWNDPROC, CallWndProc, NULL, NULL);
     }
+    emit windowChanged();
 }
 
 QWindow *WindowCustomizer::window() const { return m_window; }

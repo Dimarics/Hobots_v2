@@ -3,20 +3,31 @@ import QtQuick.Controls.Basic
 import QtQuick.Shapes
 import QtQuick.Layouts
 import QtQuick.Effects
+import App
+import "../../components"
 //import Qt5Compat.GraphicalEffects
 
 Item {
-    id: scratch
-    //property alias movement: blocksPanel.movement
-    //property alias controls: blocksPanel.controls
+    id: workspace
+    property string path: App.tempLocation + App.device.objectName + "_scratch.json"
+    property alias movement: blocksPanel.movement
+    property alias controls: blocksPanel.controls
+    property alias sensors: blocksPanel.sensors
     property ListModel variables: ListModel { dynamicRoles: true }
     clip: true
+    JsonSettings {
+        categories: [App.device.objectName, "Scratch"]
+        path: App.appDataLocation + "settings.json"
+        property alias scale: canvas.scale
+        property alias currentPath: workspace.path
+        onLoaded: workspace.open(currentPath)
+    }
+    Component.onDestruction: workspace.save(path)
     DropArea {
         id: dragHandler
         property Socket socket
-        property StackBlock stackBlock: null
-        property AbstractBlock placeItem: null
-
+        property StackBlock stackBlock
+        property AbstractBlock placeItem
         //property list<AbstractBlock> blocks
         anchors.fill: parent
         //onEntered: (drag) => blockDragStart(drag.source)
@@ -60,7 +71,7 @@ Item {
                     toFrontPlane(socket.block)
                     if (socket.type === "stack") {
                         removePlaceItem()
-                        placeItem = block.clone(workspace)
+                        placeItem = block.clone(canvas)
                         placeItem.z = -2
                         placeItem.state = "spot"
                         placeItem.connectTo(socket)
@@ -78,7 +89,7 @@ Item {
                     let newStackBlock
                     let bottomBlock = block.lastInStack()
                     let distance = Infinity
-                    for (let plugBlock of workspace.children) {
+                    for (let plugBlock of canvas.children) {
                         if (plugBlock.type !== "stack") continue
                         if (plugBlock === placeItem) plugBlock = placeItem.next
                         let dis = bottomBlock.bottomSocket.distance(plugBlock)
@@ -103,7 +114,7 @@ Item {
                             }
                         }
                     }
-                    for (let block of workspace.children) check(block)*/
+                    for (let block of canvas.children) check(block)*/
                     /*for (let block_2 of blocks) {
                         if (block_2.previous && block_2.previous.block !== placeItem) continue
                         let dis = block_1.bottomSocket.distance(block_2)
@@ -119,7 +130,7 @@ Item {
                         removePlaceItem()
                         stackBlock = newStackBlock
                         toFrontPlane(newStackBlock)
-                        placeItem = block.clone(workspace)
+                        placeItem = block.clone(canvas)
                         placeItem.state = "spot"
                         placeItem.x = newStackBlock.x
                         placeItem.y = newStackBlock.y - placeItem.bottomSocket.bindY
@@ -135,7 +146,7 @@ Item {
         }
         function blockDropped(block) {
             //addBlockToList(block)
-            block.parent = workspace
+            block.parent = canvas
             if (placeItem) {
                 socket = null
                 stackBlock = null
@@ -170,7 +181,7 @@ Item {
                     }
                 }
             }
-            for (let block of workspace.children) check(block)
+            for (let block of canvas.children) check(block)
             return newSocket
         }
         function toFrontPlane(block) {
@@ -183,7 +194,7 @@ Item {
             if (placeItem) {
                 if (stackBlock) {
                     stackBlock.disconnect()
-                    stackBlock.parent = workspace
+                    stackBlock.parent = canvas
                     stackBlock = null
                 }
                 placeItem.remove()
@@ -192,21 +203,21 @@ Item {
     }
     Flickable {
         id: flickable
-        contentWidth: workspace.width * workspace.scale; contentHeight: workspace.height * workspace.scale
+        contentWidth: canvas.width * canvas.scale; contentHeight: canvas.height * canvas.scale
         anchors.fill: parent
-        //maximumFlickVelocity: 0
+        maximumFlickVelocity: 0
         boundsMovement: Flickable.StopAtBounds
         boundsBehavior: Flickable.DragAndOvershootBounds
         ScrollBar.vertical: ScratchScrollBar {
             bottomPadding: width
         }
         ScrollBar.horizontal: ScratchScrollBar {
-            leftPadding: blocksPanel.width
+            leftPadding: blocksPanel.width + 2
             rightPadding: height
         }
         Image {
             id: background_image
-            property real drawScale: workspace.scale
+            property real drawScale: canvas.scale
             source: "qrc:/images/scratch_background.svg"
             smooth: false
             //mipmap: true
@@ -216,10 +227,10 @@ Item {
             transformOrigin: Item.TopLeft
             sourceSize: Qt.size(24 * drawScale, 24 * drawScale)
             //anchors.fill: parent
-            width: flickable.contentWidth + 24; height: flickable.contentHeight + 24
+            width: flickable.contentWidth + 48; height: flickable.contentHeight + 48
         }
         Item {
-            id: workspace
+            id: canvas
             //width: 2000; height: 2000
             transformOrigin: Item.TopLeft
         }
@@ -229,15 +240,15 @@ Item {
     BlocksPanel {
         id: blocksPanel
         width: 375; height: flickable.height
-        Component.onCompleted: {
+        /*Component.onCompleted: {
             for (let child of content)
                 if (child instanceof AbstractBlock)
                     child.dragStart.connect(dragHandler.createNewBlock)
-        }
+        }*/
     }
     MultiEffect {
         source: overlay
-        scale: workspace.scale
+        scale: canvas.scale
         anchors.fill: overlay
         transformOrigin: Item.TopLeft
         blurEnabled: true
@@ -247,9 +258,9 @@ Item {
     Item {
         id: overlay
         x: -flickable.contentX; y: -flickable.contentY
-        width: workspace.width; height: workspace.height
+        width: canvas.width; height: canvas.height
         transformOrigin: Item.TopLeft
-        scale: workspace.scale
+        scale: canvas.scale
     }
     component ZoomButton: Button {
         id: zoomButton
@@ -279,7 +290,7 @@ Item {
         anchors.rightMargin: 20
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 20
-        onClicked: { workspace.scale = 1 }
+        onClicked: { canvas.scale = 1 }
     }
     ZoomButton {
         id: zoomOut
@@ -289,7 +300,7 @@ Item {
         anchors.bottom: zoomReset.top
         anchors.bottomMargin: 10
         onClicked: {
-            workspace.scale *= 0.8
+            canvas.scale *= 0.8
             flickable.returnToBounds()
         }
     }
@@ -300,55 +311,155 @@ Item {
         anchors.rightMargin: 20
         anchors.bottom: zoomOut.top
         anchors.bottomMargin: 10
-        onClicked: { workspace.scale *= 1.25 }
+        onClicked: { canvas.scale *= 1.25 }
     }
-    /*function adjustSize() {
-        let w = workspace.childrenRect.width < flickable.width / 2 ?
-                flickable.width * 2 - workspace.childrenRect.width :
-                flickable.width + workspace.childrenRect.width
-        let dx = (w - workspace.childrenRect.width) / 2 - workspace.childrenRect.x
-        for (let child of workspace.children) child.x += dx
-        workspace.width = w
-        flickable.contentX += dx
-    }*/
     function adjustWidth() {
         let w = flickable.width * 1.5
-        if (workspace.children.length) {
+        if (canvas.children.length) {
             let min_x = Infinity
             let max_x = 0
-            for (let child of workspace.children) {
+            for (let child of canvas.children) {
                 min_x = Math.min(min_x, child.x)
                 max_x = Math.max(max_x, child.x + child.width)
-                //if (child.x < min_x) min_x = child.x
-                //if (child.x + child.width > max_x) max_x = child.x + child.width
             }
             let children_width = min_x !== Infinity && max_x !== 0 ? max_x - min_x : 0
             let dx = (children_width < flickable.width / 2 ? flickable.width - children_width : flickable.width / 2) - min_x
-            for (let child of workspace.children) child.x += dx
+            for (let child of canvas.children) child.x += dx
             w = children_width < flickable.width / 2 ? flickable.width * 2 - children_width : flickable.width + children_width
             background_image.x = (background_image.x + dx) % 24 - 24
-            flickable.contentX += dx * workspace.scale
+            flickable.contentX += dx * canvas.scale
+            //flickable.contentItem.x -= dx * canvas.scale
         }
-        workspace.width = w
+        canvas.width = w
     }
     function adjustHeight() {
         let h = flickable.height * 1.5
-        if (workspace.children.length) {
+        if (canvas.children.length) {
             let min_y = Infinity
             let max_y = 0
-            for (let child of workspace.children) {
+            for (let child of canvas.children) {
                 min_y = Math.min(min_y, child.y)
                 max_y = Math.max(max_y, child.y + child.height)
-                //if (child.y < min_y) min_y = child.y
-                //if (child.y + child.height > max_y) max_y = child.y + child.height
             }
             let children_height = min_y !== Infinity && max_y !== 0 ? max_y - min_y + 8 : 0
             let dy = (children_height < flickable.height / 2 ? flickable.height - children_height : flickable.height / 2) - min_y
-            for (let child of workspace.children) child.y += dy
+            for (let child of canvas.children) child.y += dy
             h = children_height < flickable.height / 2 ? flickable.height * 2 - children_height : flickable.height + children_height
             background_image.y = (background_image.y + dy) % 24 - 24
-            flickable.contentY += dy * workspace.scale
+            flickable.contentY += dy * canvas.scale
+            //flickable.contentItem.y -= dy * canvas.scale
         }
-        workspace.height = h
+        canvas.height = h
     }
+    function topLevelBlocks() {
+        let blocks = []
+        for (let child of canvas.children) {
+            if (child instanceof StackBlock) {
+                blocks.push(child)
+            }
+        }
+        blocks.sort((a, b) => b.y - a.y)
+        return blocks
+    }
+    function clear() {
+        for (let child of canvas.children) child.destroy()
+        blocksPanel.clear()
+        variables.clear()
+        adjustWidth(); adjustHeight()
+    }
+    function save(filePath) {
+        path = filePath
+        var json = {
+            "app": "Scratch",
+            "device": App.device.objectName,
+            "contentX": flickable.contentX,
+            "contentY": flickable.contentY,
+            "stacks": []
+        }
+        function getBlockJSON(block) {
+            let blockJSON = { "name": block.objectName }
+            if (block.getData && block.getData()) blockJSON.data = block.getData()
+            blockJSON.plugs = []
+            for (let i = 0; i < block.sockets.length; ++i) {
+                if (block.sockets[i].next) {
+                    let plug = getBlockJSON(block.sockets[i].next)
+                    plug.index = i
+                    blockJSON.plugs.push(plug)
+                }
+            }
+            return blockJSON
+        }
+        for (let block of canvas.children) {
+            let blockJSON = getBlockJSON(block)
+            blockJSON.x = block.x; blockJSON.y = block.y
+            json.stacks.push(blockJSON)
+        }
+        if (variables.count) {
+            json.variables = []
+            for (let i = 0; i < variables.count; ++i) {
+                let variable = variables.get(i)
+                json.variables.push({"name": variable.name, "value": variable.value})
+            }
+        }
+        App.saveFile(JSON.stringify(json, null, 4), path)
+    }
+    function open(filePath) {
+        clear()
+        if (!filePath) return
+        const json = App.readJSON(filePath)
+        if (!json) {
+            return
+        } else if (json.app !== "Scratch") {
+            console.error("Неверный формат"); return
+        } else if (json.device !== App.device.objectName) {
+            console.error("Этот файл предназначен для другого устройства"); return
+        }
+        path = filePath
+        flickable.contentX = json.contentX; flickable.contentY = json.contentY
+        // заполнение переменными
+        if (json.variables) {
+            for (let variable of json.variables) {
+                blocksPanel.addVariable(variable.name, variable.value)
+            }
+        }
+        // создание блоков
+        function createBlock(blockJSON) {
+            let block = Qt.createComponent("blocks/" + blockJSON.name + ".qml").createObject(canvas, {"canvas": canvas})
+            if (blockJSON.data) block.setData(blockJSON.data)
+            block.dragStart.connect(dragHandler.blockDragStart)
+            block.clicked.connect(dragHandler.toFrontPlane)
+            for (let plug of blockJSON.plugs) {
+                createBlock(plug).connectTo(block.sockets[plug.index])
+            }
+            return block
+        }
+        for (let blockJSON of json.stacks) {
+            let block = createBlock(blockJSON);
+            block.x = blockJSON.x; block.y = blockJSON.y
+        }
+        adjustWidth(); adjustHeight()
+    }
+    /*JsonSettings {
+        property alias contentX: flickable.contentX
+        property alias contentY: flickable.contentY
+        //canvasScale:
+        function save() {
+            var json = {}
+            json.block
+            //blocks: []
+            //variables: [{"name", "value"}]
+            for (let block of canvas.children) {
+                let blockJSON = { "name": block.objectName, "x": block.x, "y": block.y }
+                if (block.getData && block.getData()) blockJSON.data = block.getData()
+                // objectName
+                // block { name: "setJoint", data: [], children: [] }
+                for (let socket of block.sockets) {
+                    // if (socket.next) save(socket.next)
+                }
+            }
+        }
+        function load() {
+
+        }
+    }*/
 }

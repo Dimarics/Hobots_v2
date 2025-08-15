@@ -2,17 +2,61 @@ import QtQuick
 import QtQuick.Controls.Basic as T
 import QtQuick.Layouts
 import QtQuick.Shapes
+import App
+import Hobots
 import "components" as C
 import "Hobot_L_type_3"
 
 CustomWindow {
     id: window
+    width: 900
+    height: 480
+    visibility: Window.Maximized
+    C.JsonSettings {
+        id: settings
+        path: App.appDataLocation + "settings.json"
+        property alias windowX: window.x
+        property alias windowY: window.y
+        property alias windowWidth: window.width
+        property alias windowHeight: window.height
+        property alias windowVisibility: window.visibility
+        property string currentDevice
+        onLoaded: deviceBox.currentIndex = deviceBox.find(currentDevice)
+    }
+    Binding { settings.currentDevice: deviceBox.currentText }
+    /*Component.onCompleted: {
+        const settingsData = App.readSettings()
+        if (settingsData) {
+            try {
+                const settings = JSON.parse(settingsData)
+                if (settings.windowX) window.x = settings.windowX
+                if (settings.windowY) window.y = settings.windowY
+                if (settings.windowWidth) window.width = settings.windowWidth
+                if (settings.windowHeight) window.height = settings.windowHeight
+                if (settings.windowVisibility) window.visibility = settings.windowVisibility
+                if (settings.currentDevice) deviceBox.currentText = settings.currentDevice
+            } catch (error) {
+                console.error("Файл настроек повреждён", error)
+            }
+        } else {
+            console.log("файл настроек не обнаружен")
+        }
+    }
+    Component.onDestruction: {
+        var settings = {
+            windowX: window.x,
+            windowY: window.y,
+            windowWidth: window.width,
+            windowHeight: window.height,
+            windowVisibility: window.visibility
+        }
+        App.saveSettings(JSON.stringify(settings, null, 4))
+    }*/
     C.Flickable {
         id: toolBar
         //contentWidth: toolBarLayout.width > parent.width ? toolBarLayout.width : parent.width
         height: 90; width: parent.width
         contentWidth: toolBarLayout.width
-        //ScrollBar.horizontal: ScrollBar { }
         RowLayout {
             id: toolBarLayout
             width: Math.max(toolBar.width, implicitWidth)
@@ -20,44 +64,33 @@ CustomWindow {
             //width: parent.width
             //leftMargin: 20
             //rightMargin: 20
-            spacing: 25
+            spacing: 20
             C.Button {
                 id: connectionButton
                 borderRadius: height / 2
-                Layout.leftMargin: 20
+                Layout.leftMargin: toolBarLayout.spacing
                 checkable: true
                 icon.width: 37
                 icon.height: 37
                 icon.source: checked ? "qrc:/images/plug_connected.svg" : "qrc:/images/plug_unconnected.svg"
             }
             C.ComboBox {
-                id: port
-                Layout.preferredWidth: 150
+                id: portBox
+                model: App.availablePorts
+                Layout.preferredWidth: 140
             }
             C.ComboBox {
-                id: modelBox
-                Layout.preferredWidth: 170
-                onCurrentTextChanged: {
-                    switch (currentText) {
-
-                    }
-                }
+                id: protocolBox
+                model: App.device ? App.device.availableProtocols : null
+                Layout.preferredWidth: 140
+                //onCurrentTextChanged: setDevice(currentText)
             }
-            Item { Layout.fillWidth: true }
-            Rectangle {
-                id: online
-                radius: 8
-                height: 35
-                color: C.Style.darkWidgetColor
-                Layout.preferredWidth: 80
-                border { width: 2; color: online.active ? C.Style.highlightTextColor : "red" }
-                C.Text {
-                    text: online.active ? "online" : "offline"
-                    color: online.active ? C.Style.highlightTextColor : "red"
-                    horizontalAlignment: Text.AlignHCenter
-                    font.pointSize: 14
-                    anchors.fill: parent
-                }
+            C.ComboBox {
+                id: deviceBox
+                //currentIndex: -1
+                model: App.availableDevices
+                Layout.preferredWidth: 170
+                onCurrentTextChanged: setDevice(currentText)
             }
             Item { Layout.fillWidth: true }
             Rectangle {
@@ -65,7 +98,8 @@ CustomWindow {
                 radius: 10
                 height: 60
                 color: C.Style.darkWidgetColor
-                Layout.minimumWidth: 300; Layout.maximumWidth: 300
+                Layout.preferredWidth: 270
+                //Layout.minimumWidth: 270; Layout.maximumWidth: 300
                 border { width: 2; color: "#20FFFFFF" }
                 Image {
                     id: logo
@@ -77,6 +111,23 @@ CustomWindow {
                     horizontalAlignment: Qt.AlignHCenter
                     anchors.fill: parent
                     anchors.margins: 10
+                }
+            }
+            Item { Layout.fillWidth: true }
+            Rectangle {
+                id: onlineStatus
+                property bool active
+                radius: 8
+                height: 35
+                color: C.Style.darkWidgetColor
+                Layout.preferredWidth: 80
+                border { width: 2; color: active ? C.Style.highlightTextColor : "red" }
+                C.Text {
+                    text: parent.active ? "online" : "offline"
+                    color: parent.active ? C.Style.highlightTextColor : "red"
+                    horizontalAlignment: Text.AlignHCenter
+                    font.pointSize: 14
+                    anchors.fill: parent
                 }
             }
             Item { Layout.fillWidth: true }
@@ -94,7 +145,7 @@ CustomWindow {
             }
             C.Button {
                 id: stopButton
-                Layout.rightMargin: 20
+                Layout.rightMargin: toolBarLayout.spacing
                 backgroundColor: pressed ? "#FF320A" : hovered ? "#E6320A" : "#C8320A"
                 borderWidth: 3
                 borderRadius: height / 2
@@ -137,7 +188,7 @@ CustomWindow {
     }*/
     Item {
         id: controlPanel
-        property Item model//: Item { anchors.fill: parent; anchors.topMargin: 28; parent: controlPanel }
+        property Item model
         visible: model
         width: !visible || hideControlPanel.checked ? 0 : 450
         anchors { top: toolBar.bottom; right: parent.right; bottom: parent.bottom }
@@ -148,9 +199,9 @@ CustomWindow {
         }
         Rectangle { width: 2; height: parent.height; color: C.Style.borderColor }
         Behavior on width { NumberAnimation { duration: 300 } }
-        function setModel(newModel) {
+        function setModel(url) {
             if (model) model.destroy()
-            model = newModel.createObject(root, { 'anchors.fill': controlPanelFrame, 'anchors.topMargin': 28 })
+            if (url) model = Qt.createComponent(url).createObject(controlPanel, { 'anchors.fill': controlPanelFrame, 'anchors.topMargin': 28 })
         }
     }
     T.Button {
@@ -180,15 +231,15 @@ CustomWindow {
     }
     C.Flickable {
         id: apps
-        property Item model: HLT3_apps { parent: apps.contentItem }
+        property Item model
         clip: true
-        contentWidth: model.width; contentHeight: model.height
+        contentWidth: model ? model.width : 0; contentHeight: model ? model.height : 0
         boundsMovement: Flickable.StopAtBounds
         boundsBehavior: Flickable.DragAndOvershootBounds
         anchors { top: appsHeader.bottom; left: parent.left; right: controlPanel.left; bottom: parent.bottom }
-        function setModel(model) {
+        function setModel(url) {
             if (model) model.destroy()
-            model = newModel.createObject(apps.contentItem)
+            if (url) model = Qt.createComponent(url).createObject(apps.contentItem)
         }
         /*Component.onCompleted: {
             model.parent = apps.contentItem
@@ -200,5 +251,50 @@ CustomWindow {
             model.width = Qt.binding(() => Math.max(model.implicitWidth, width))
             model.height = Qt.binding(() => Math.max(model.implicitHeight, height))
         }*/
+    }
+    //-----------------------------------------------------------------
+    Connections {
+        target: connectionButton
+        function onToggled() {
+            if (connectionButton.checked) {
+                //console.log(App.device.protocol)
+                if (App.device) {
+                    if ('portName' in App.device.protocol) App.device.protocol.portName = portBox.currentText
+                    App.device.protocol.connectDevice()
+                }
+            } else {
+                onlineStatus.active = false
+                connectionButton.checked = false
+                if (App.device) App.device.protocol.disconnectDevice()
+            }
+        }
+    }
+    Connections {
+        target: App.device ? App.device.protocol : null
+        function onConnected() {}
+        function onDisconnected() {
+            onlineStatus.active = false
+            connectionButton.checked = false
+        }
+        function onOnlineChanged(online) { onlineStatus.active = online }
+    }
+    function setDevice(deviceName) {
+        var appsUrl, controlPanelUrl, deviceUrl
+        switch(deviceName) {
+        case "Хобот L Т3":
+            appsUrl = "Hobot_L_type_3/HLT3_apps.qml"
+            deviceUrl = "Hobot_L_type_3/HLT3_device.qml"
+            break
+        default:
+            App.device = null
+            apps.setModel(null)
+            controlPanel.setModel(null)
+            return
+        }
+        apps.setModel(appsUrl)
+        controlPanel.setModel(controlPanelUrl)
+        App.device = Qt.createComponent(deviceUrl).createObject(App)
+        App.device.objectName = deviceName
+        App.device.protocolName = Qt.binding(()=>protocolBox.currentText)
     }
 }

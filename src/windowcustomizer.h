@@ -13,7 +13,8 @@
 class WindowCustomizer : public QObject
 {
     Q_OBJECT
-    QML_NAMED_ELEMENT(WindowCustomizer)
+    QML_ELEMENT
+    //QML_NAMED_ELEMENT(WindowCustomizer)
     Q_PROPERTY(QWindow* window READ window WRITE setWindow NOTIFY windowChanged)
 
 public:

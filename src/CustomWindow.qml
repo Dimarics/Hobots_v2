@@ -7,11 +7,10 @@ import "qrc:/../QtExtras/qml"
 
 Window {
     id: window
-    width: 900; height: 480
     visible: true
-    visibility: Window.Maximized
     color: "transparent"
-    default property alias children: content.children
+    default property alias data: content.data
+    property Item content: content
     WindowCustomizer { window: window }
     MouseArea {
         // 47 x 28
@@ -100,7 +99,14 @@ Window {
     Rectangle {
         id: content
         color: Style.lightWidgetColor
-        anchors { top: separator.bottom; bottom: parent.bottom; left: parent.left; right: parent.right }
+        parent: window.contentItem
+        anchors { top: separator.bottom; bottom: window.contentItem.bottom; left: parent.left; right: parent.right }
+        /*Component.onCompleted: {
+            anchors.top = separator.bottom
+            anchors.bottom = parent.bottom
+            anchors.left = parent.left
+            anchors.right = parent.right
+        }*/
     }
     /*Rectangle {
         color: "#00326E"
@@ -122,5 +128,16 @@ Window {
         borderColor: Style.borderColor
         borderTop: 2
         anchors { top: panel.bottom; bottom: parent.bottom; left: parent.left; right: parent.right }
+    }*/
+    Item {
+        anchors.fill: parent
+        focus: true
+        PointHandler {
+            onActiveChanged: if (active) parent.focus = true
+        }
+    }
+    /*Shortcut {
+        sequence: "F11"
+        onActivated: window.showFullScreen()
     }*/
 }

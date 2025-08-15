@@ -1,4 +1,4 @@
- import QtQuick
+import QtQuick
 import QtQuick.Controls.Basic
 import QtQuick.Shapes
 import QtQuick.Layouts
@@ -7,58 +7,81 @@ import "../../components" as C
 //import Qt5Compat.GraphicalEffects
 
 Item {
+    id: scratch
+    property alias movement: workspace.movement
+    property alias controls: workspace.controls
+    property alias sensors: workspace.sensors
+    property AbstractBlock currentBlock
+    property list<AbstractBlock> topLevelBlocks
+    property list<AbstractBlock> blocksWithContent
     signal exit
-    Item {
+    C.ToolBar {
         id: toolBar
-        height: exitButton.height + 30
         anchors { top: parent.top; left: parent.left; right: parent.right }
-        C.Flickable {
-            clip: true
-            width: parent.width - exitButton.width - 30; height: parent.height
-            contentWidth: layout.implicitWidth + 15//; contentHeight: layout.implicitHeight
-            RowLayout {
-                id: layout
-                spacing: 15
-                anchors.fill: parent
-                anchors.margins: 15
-                C.Button {
-                    icon.source: "qrc:/images/create.svg"
-                    icon.height: 40; icon.width: 0
+        onOpen: workspace.open("D:/scratch.json")
+        onSave: workspace.save(workspace.path)
+        onSaveAs: workspace.save("D:/scratch.json")
+        onClear: { workspace.clear(); stop() }
+        onStartButtonToggled: {
+            if (running) {
+                topLevelBlocks = workspace.topLevelBlocks()
+                if (topLevelBlocks.length) {
+                    currentBlock = topLevelBlocks.pop()
+                    if (currentBlock.reset) {
+                        currentBlock.reset()
+                        blocksWithContent.push(currentBlock)
+                    }
+                    currentBlock.glow = true
+                    currentBlock.run()
+                } else {
+                    running = false
                 }
-                C.Button {
-                    icon.source: "qrc:/images/open.svg"
-                    icon.height: 0; icon.width: 40
-                }
-                C.Button {
-                    icon.source: "qrc:/images/save.svg"
-                }
-                C.Button {
-                    icon.source: "qrc:/images/save_as.svg"
-                }
-                //Rectangle { width: 2; height: 50; color: "red" }
-                C.Button {
-                    icon.source: "qrc:/images/trash.svg"
-                    icon.height: 0; icon.width: 36
-                }
-                C.Button {
-                    text: "Старт"
-                }
-                C.Button {
-                    text: "Стоп"
-                }
-                C.Button {
-                    text: "Пример"
-                }
+            } else {
+                currentBlock.run();
             }
         }
-        C.Button {
-            id: exitButton
-            text: "Выход"
-            anchors { verticalCenter: parent.verticalCenter; right: parent.right; margins: 15}
-            onClicked: exit()
-        }
+        onStop: scratch.stop()
+        onExit: scratch.exit()
     }
     ScratchWorkspace {
+        id: workspace
         anchors { top: toolBar.bottom; bottom: parent.bottom; left: parent.left; right: parent.right }
+    }
+    Connections {
+        target: currentBlock
+        //ignoreUnknownSignals: false
+        function onCompleted(next) {
+            if (!toolBar.running) return
+            currentBlock.glow = false
+            if (next) {
+                if (next.reset) { next.reset(); blocksWithContent.push(next) }
+                currentBlock = next
+            } else {
+                if (blocksWithContent.length) {
+                    currentBlock = blocksWithContent[blocksWithContent.length - 1]
+                    if (currentBlock.finished) blocksWithContent.pop()
+                } else if (topLevelBlocks.length) {
+                    currentBlock = topLevelBlocks.pop()
+                    if (currentBlock.reset) {
+                        currentBlock.reset()
+                        blocksWithContent.push(currentBlock)
+                    }
+                } else {
+                    stop(); return
+                }
+            }
+            currentBlock.glow = true
+            Qt.callLater(() => currentBlock.run())
+        }
+    }
+    function stop() {
+        if (currentBlock) {
+            currentBlock.glow = false
+            currentBlock = null
+        }
+        blocksWithContent = []
+        topLevelBlocks = []
+        toolBar.running = false
+        //console.log("stop")
     }
 }

@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import "../components"
 import "../modes/scratch"
+import "../modes/scratch/blocks"
 
 Item {
     id: root
@@ -23,7 +24,17 @@ Item {
     Component {
         id: scratch
         Scratch {
-
+            movement: [
+                RotateMotor { list: ['A', 'B', 'C', 'D', 'E', 'F'] }
+            ]
+            controls: [
+                Delay {}
+            ]
+            sensors: [
+                TouchSensor { list: ['A', 'B', 'C', 'D', 'E', 'F'] },
+                //ColorSensor { colorSensors: ['A', 'B', 'C', 'D', 'E', 'F'] },
+                Sonar { list: ['A', 'B', 'C', 'D', 'E', 'F'] }
+            ]
         }
     }
     Component {
@@ -36,10 +47,14 @@ Item {
             ModeButton {
                 //id: scratchButton
                 text: "Scratch"
+                icon.source: "qrc:/images/scratch.svg"
+                icon.width: 160; icon.height: 160
                 onClicked: setPage(scratch)
             }
             ModeButton {
                 text: "Скрипт"
+                icon.source: "qrc:/images/script.svg"
+                icon.width: 160; icon.height: 160
             }
         }
     }

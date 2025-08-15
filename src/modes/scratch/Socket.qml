@@ -26,8 +26,8 @@ Item {
         var worldY = block ? block.y + touchY : touchY
         return Math.sqrt(Math.pow(worldX - plugBlock.x - plugBlock.plugX, 2) +
                          Math.pow(worldY - plugBlock.y - plugBlock.plugY, 2))*/
-        var socketPos = block.mapToItem(workspace, bindX, bindY)
-        var plugPos = plugBlock.mapToItem(workspace, plugBlock.plugX, plugBlock.plugY)
+        var socketPos = block.mapToItem(block.canvas, bindX, bindY)
+        var plugPos = plugBlock.mapToItem(block.canvas, plugBlock.plugX, plugBlock.plugY)
         return Math.sqrt(Math.pow(socketPos.x - plugPos.x, 2) + Math.pow(socketPos.y - plugPos.y, 2))
     }
     Component {
@@ -50,35 +50,13 @@ Item {
         }
     }
     function setGlow(glow) {
-        if (glow) {
+        if (glow && !glowObject) {
             glowObject = glowComponent.createObject(root)
-        } else if (glowObject) {
+        } else if (!glow && glowObject) {
             glowObject.destroy()
         }
     }
-    /*Loader {
-        id: glowLoader
-        //parent: block ?? null
-        active: false
-        sourceComponent: MultiEffect {
-            source: Shape {
-                preferredRendererType: Shape.CurveRenderer
-                ShapePath {
-                    strokeWidth: 5
-                    Component.onCompleted: pathElements = root.path
-                }
-            }
-            width: source.width; height: source.height
-            paddingRect: Qt.rect(2, 2, 0, 0)
-            blurEnabled: true
-            blur: 1.0
-            blurMax: 8
-            brightness: 1
-        }
-    }*/
     Component.onCompleted: {
-        //setGlowEnabled(true)
-        //block.sockets.push(this)
         block instanceof AbstractBlock ? block.sockets.push(this) : console.log("Невозможно добавить сокет")
     }
 }

@@ -31,8 +31,12 @@ AbstractBlock {
             //console.log(layout.children[0] instanceof ScratchText)
             if (layout.children[0] instanceof ScratchText)
                 layout.anchors.leftMargin = 12
+            else if (layout.children[0] instanceof ListItem)
+                layout.anchors.leftMargin = 16
             if (layout.children[layout.children.length - 1] instanceof ScratchText)
                 layout.anchors.rightMargin = 12
+            if (layout.children[layout.children.length - 1] instanceof ListItem)
+                layout.anchors.rightMargin = 16
         }
     }
 }

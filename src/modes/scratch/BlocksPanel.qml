@@ -7,9 +7,13 @@ import "blocks"
 Item {
     id: root
     default property alias content: layout.data
+    property alias movement: movementLayout.data
+    property alias controls: controlsLayout.data
+    property alias sensors: sensorsLayout.data
     component SectionLabel: Text {
         color: "#555F73"
         font.family: "Segoe UI"; font.pointSize: 14; font.weight: Font.DemiBold
+        Layout.topMargin: 20; Layout.bottomMargin: -5
     }
     component BPButton: Button {
         id: button
@@ -33,11 +37,11 @@ Item {
     }
     component ScratchPopup: Popup {
         id: scratchPopup
-        parent: scratch
+        parent: workspace
         anchors.centerIn: parent
         dim: true
         font.family: "Segoe UI"; font.pointSize: 12
-        Overlay.modeless: Rectangle { color: "#30000000"; parent: scratch }
+        Overlay.modeless: Rectangle { color: "#30000000"; parent: scratchPopup.parent }
         background: Rectangle {
             radius: 8
         }
@@ -68,22 +72,7 @@ Item {
                 Button { text: "Отмена"; font: newVariable.font; onClicked: newVariable.close() }
                 Button { text: "ОК"; font: newVariable.font;
                     onClicked: {
-                        var name = varName.text.trim()
-                        if (name) {
-                            var variable = Qt.createComponent("blocks/Variable.qml").createObject(null, { name: name })
-                            variable.dragStart.connect(dragHandler.createNewBlock)
-                            //scratch.variables.set(name, 0)
-                            function compare(a, b) {
-                                if (parseFloat(a) && parseFloat(b)) {
-                                    return parseFloat(b) - parseFloat(a)
-                                }
-                                return b.localeCompare(a)
-                            }
-                            for (var i = 0; i < scratch.variables.count && compare(name, scratch.variables.get(i).name) < 0; ++i);
-                            layout.insert(variable, layout.children.lastIndexOf(variableSection) + 3 + i)
-                            scratch.variables.insert(i, {"name": name, "value": undefined})
-                            if (scratch.variables.count === 1) set_variable.index = 0
-                        }
+                        addVariable(varName.text.trim())
                         newVariable.close()
                     }
                 }
@@ -118,10 +107,22 @@ Item {
             spacing: 24
             anchors.fill: parent
             anchors.margins: 16
-            SectionLabel { text: "Движение" }
-            SetJoint { jointList: ['1', '2', '3', '4', '5', '6'] }
-            SectionLabel { text: "Управление" }
-            Delay {}
+            ColumnLayout {
+                id: movementLayout
+                spacing: layout.spacing
+                SectionLabel { text: "Движение"; Layout.topMargin: 10 }
+            }
+            ColumnLayout {
+                id: controlsLayout
+                spacing: layout.spacing
+                SectionLabel { text: "Управление" }
+            }
+            ColumnLayout {
+                id: sensorsLayout
+                spacing: layout.spacing
+                visible: children.length > 1
+                SectionLabel { text: "Датчики" }
+            }
             SectionLabel { text: "Операторы" }
             //id: sum; Timer{running: true; interval: 500; repeat: true; onTriggered: {console.log(sum.value())}}
             Sum {}
@@ -135,16 +136,21 @@ Item {
             And {}
             Or {}
             Not {}
-            SectionLabel { text: "Циклы и условия" }
+            SectionLabel { text: "Условия" }
+            If {}
             IfElse {}
+            SectionLabel { text: "Циклы" }
+            RepeatCount {}
+            RepeatFor {}
+            RepeatAll {}
             SectionLabel { id: variableSection; text: "Переменные" }
             BPButton {
                 id: createVariable
                 onClicked: newVariable.open()
             }
             SetVariable {
-                id: set_variable;
-                visible: scratch.variables.count
+                id: setVariable;
+                visible: workspace.variables.count
                 //onVisibleChanged: if (visible) update()
             }
             function insert(item, index) {
@@ -192,5 +198,38 @@ Item {
             trashOverlay.opacity = 0
             drop.source.destruct()
         }
+    }
+    Component.onCompleted: {
+        function connectChildren(object) {
+            for (let child of object.children) {
+                if (child instanceof AbstractBlock) {
+                    child.dragStart.connect(dragHandler.createNewBlock)
+                    child.canvas = canvas
+                }
+                if (child instanceof StackBlock)
+                    child.Layout.bottomMargin = 8
+            }
+        }
+        connectChildren(layout)
+        connectChildren(movementLayout)
+        connectChildren(controlsLayout)
+        connectChildren(sensorsLayout)
+    }
+    function clear() { for (let child of layout.children) if (child instanceof Variable) child.destroy() }
+    function addVariable(name, value = 0) {
+        if (!name) return
+        var variable = Qt.createComponent("blocks/Variable.qml").createObject(null, { name: name })
+        variable.dragStart.connect(dragHandler.createNewBlock)
+        //workspace.variables.set(name, 0)
+        function compare(a, b) {
+            if (parseFloat(a) && parseFloat(b)) {
+                return parseFloat(b) - parseFloat(a)
+            }
+            return b.localeCompare(a)
+        }
+        for (var i = 0; i < workspace.variables.count && compare(name, workspace.variables.get(i).name) < 0; ++i);
+        layout.insert(variable, layout.children.lastIndexOf(variableSection) + 2 + i)
+        workspace.variables.insert(i, {"name": name, "value": value})
+        if (workspace.variables.count === 1) setVariable.index = 0
     }
 }

@@ -13,6 +13,7 @@ Item {
     property string type
     property ShapePath shapePath
     property Socket previous
+    property Item canvas
     //property Component prototype
     property list<Socket> sockets
     //property list<Item> content
@@ -129,25 +130,24 @@ Item {
         }
         return copy
     }*/
+    //Binding { when: root.previous && root.previous.block; root.parent: root.previous.block }
+    //Binding { root.x: root.previous ? root.previous.bindX - root.plugX : 0 }
+    //Binding { root.y: root.previous ? root.previous.bindY - root.plugY : 0 }
     onPreviousChanged: {
         if (previous) {
             parent = previous.block
             x = Qt.binding(() => previous.bindX - plugX)
             y = Qt.binding(() => previous.bindY - plugY)
         } else {
-            var pos = mapToItem(overlay, 0, 0)
+            var pos = mapToItem(canvas, 0, 0)
             x = pos.x; y = pos.y
         }
     }
-    Timer {
-        interval: 2000
-        running: true
-        repeat: true
-        //onTriggered: if (root.run !== undefined) root.run()
-    }
     function clone(parent: Item): AbstractBlock {
         //var component = prototype ?? Qt.createComponent(objectName + ".qml")
+        //var newBlock = Qt.createComponent("blocks/" + objectName + ".qml").createObject(parent ?? root.parent)
         var newBlock = Qt.createComponent("blocks/" + objectName + ".qml").createObject(parent ?? root.parent)
+        newBlock.canvas = canvas
         copyData(newBlock)
         return newBlock
     }
@@ -177,14 +177,14 @@ Item {
         return newBlock
     }*/
     function copyData(target) {
-        //target.prototype = prototype
-        for (let i = 0; i < content.length; ++i) {
+        /*for (let i = 0; i < content.length; ++i) {
             if (content[i] instanceof ValueInput) {
                 target.content[i].text = content[i].text
             } else if (content[i] instanceof ListItem) {
                 target.content[i].model = content[i].model
             }
-        }
+        }*/
+        target.setData(getData())
     }
     function dragClone(parent: Item): AbstractBlock {
         var newBlock = clone(parent)
@@ -217,5 +217,31 @@ Item {
     function rootBlock() {
         for (var block = this; block.previous; block = block.previous.block);
         return block
+    }
+    function getData() {
+        let data = []
+        for (let i = 0; i < content.length; ++i) {
+            if (content[i] instanceof ValueInput) {
+                data.push(content[i].text)
+            } else if (content[i] instanceof ListItem) {
+                data.push(content[i].model)
+                data.push(content[i].currentIndex)
+            }
+        }
+        return data
+    }
+    function setData(data) {
+        let data_index = 0
+        for (let i = 0; i < content.length; ++i) {
+            if (content[i] instanceof ValueInput) {
+                content[i].text = data[data_index]
+                ++data_index
+            } else if (content[i] instanceof ListItem) {
+                content[i].model = data[data_index]
+                ++data_index
+                content[i].currentIndex = data[data_index]
+                ++data_index
+            }
+        }
     }
 }

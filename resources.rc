@@ -1,0 +1,30 @@
+#include <windows.h>
+#include "AppData.inf"
+
+IDI_ICON1 ICON "icon.ico"
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION     RC_VERSION
+PRODUCTVERSION  RC_VERSION
+
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904E4"
+        BEGIN
+            VALUE "FileVersion",        Version
+            VALUE "ProductVersion",     Version
+            VALUE "ProductName",        ProductName
+            VALUE "FileDescription",    Description
+            VALUE "OriginalFilename",   ProductName
+            VALUE "Comments",           ProductName
+            VALUE "CompanyName",        CompanyName
+            VALUE "LegalCopyright",     Copyright
+            VALUE "InternalName",       ProductName
+        END
+    END
+ 
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x0419, 1252
+    END
+END

@@ -23,6 +23,13 @@
         <file>images/save.svg</file>
         <file>images/save_as.svg</file>
         <file>images/trash.svg</file>
+        <file>images/exit.svg</file>
+        <file>images/pause.svg</file>
+        <file>images/start.svg</file>
+        <file>images/stop.svg</file>
+        <file>images/scratch.svg</file>
+        <file>images/script.svg</file>
+        <file>images/repeat_arrow.svg</file>
     </qresource>
     <qresource prefix="/../QtExtras/qml"/>
 </RCC>

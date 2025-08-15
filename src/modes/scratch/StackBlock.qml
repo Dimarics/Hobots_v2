@@ -10,7 +10,7 @@ AbstractBlock {
     property alias next: bottomSocket.next
     property alias glow: glowLoader.active
     property Socket bottomSocket: bottomSocket
-    property var run
+    signal completed(StackBlock next)
     objectName: "Stack"
     type: "stack"
     plugX: 24
