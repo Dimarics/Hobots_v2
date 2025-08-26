@@ -7,7 +7,7 @@ import QtQuick.Effects
 
 T.ComboBox {
     id: root
-    property AbstractBlock block
+    property BasicBlock block
     font.family: "Segoe UI"; font.pointSize: 14; font.weight: Q.Font.DemiBold
     implicitHeight: 32
     //Layout.preferredHeight: 30

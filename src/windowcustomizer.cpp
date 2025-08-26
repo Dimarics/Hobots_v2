@@ -1,54 +1,14 @@
 #include "windowcustomizer.h"
-#include "qdebug.h"
 
-const int margin = 9;
-
+#ifdef Q_OS_WINDOWS
+static const int margin = 9;
 typedef BOOL (WINAPI *PFN_ISWINDOWARRANGED)(HWND);
 PFN_ISWINDOWARRANGED isWindowArranged = NULL;
-
 WNDPROC WindowCustomizer::WndProc;
 
-WindowCustomizer::WindowCustomizer(QObject *parent) : QObject(parent), m_window(nullptr) {
-    if (!isWindowArranged) {
-        HMODULE hUser32 = GetModuleHandle(L"user32.dll");
-        if (hUser32) isWindowArranged = (PFN_ISWINDOWARRANGED)GetProcAddress(hUser32, "IsWindowArranged");
-    }
-}
-
-void WindowCustomizer::setWindow(QWindow *window)
-{
-    if (m_window == window) return;
-    m_window = window;
-    if (window) {
-        HWND hWnd = (HWND)window->winId();
-        //DWM
-        //DWMNCRENDERINGPOLICY policy = DWMNCRP_DISABLED;
-        //DwmSetWindowAttribute(hWnd, DWMWA_NCRENDERING_POLICY, &policy, sizeof(policy));
-        /*MARGINS margins;
-            margins.cyTopHeight = margin;
-            margins.cyBottomHeight = margin;
-            margins.cxLeftWidth = margin;
-            margins.cxRightWidth = margin;
-            DwmExtendFrameIntoClientArea(hWnd, &margins);*/
-        //
-        WndProc = (WNDPROC)GetWindowLongPtr(hWnd, GWLP_WNDPROC);
-        SetWindowLongPtr(hWnd, GWLP_WNDPROC, (LONG_PTR)CustomizerWndProc);
-        //MoveWindow(hWnd, window->x(), window->y(), window->width(), window->height(), true);
-        //connect(window, &QWindow::widthChanged, this, [](int width){ qDebug() << width; });
-        //SetWindowsHookExA(WH_CALLWNDPROC, CallWndProc, NULL, NULL);
-    }
-    emit windowChanged();
-}
-
-QWindow *WindowCustomizer::window() const { return m_window; }
-
-
-LRESULT CALLBACK WindowCustomizer::CustomizerWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
-//LRESULT WINAPI CustomizerWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
+LRESULT CALLBACK WindowCustomizer::CustomizerWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
     case WM_EXITSIZEMOVE:
-    {
         if (isWindowArranged && isWindowArranged(hWnd)) {
             RECT rc;
             GetWindowRect(hWnd, &rc);
@@ -58,33 +18,8 @@ LRESULT CALLBACK WindowCustomizer::CustomizerWndProc(HWND hWnd, UINT msg, WPARAM
             int height = rc.bottom - rc.top + margin * 2;
             MoveWindow(hWnd, x, y, width, height, true);
         }
-    }
         break;
-        /*case WM_WINDOWPOSCHANGING:
-    {
-        WINDOWPOS* windowpos = (WINDOWPOS*)lParam;
-        int halfScreenWidth = (GetSystemMetrics(SM_CXMAXIMIZED) - margin) / 2;
-        int halfScreenHeight = (GetSystemMetrics(SM_CYMAXIMIZED)) / 2;
-        //qDebug() << windowpos->cy + windowpos->y;//<< halfScreenHeight;
-        if (windowpos->x == 0) {
-            windowpos->x = -margin;
-            windowpos->cx += margin * 2;
-        }
-        if (windowpos->y == 0) {
-            windowpos->y = -margin;
-            windowpos->cy += margin * 2;
-        }
-        break;
-    }*/
-        /*case WM_GETMINMAXINFO:
-    {
-        MINMAXINFO* minMaxInfo = (MINMAXINFO*)lParam;
-        minMaxInfo->ptMinTrackSize.x = 300;
-        minMaxInfo->ptMinTrackSize.y = 200;
-        break;
-    }*/
     case WM_NCCALCSIZE:
-    {
         if (wParam) {
             NCCALCSIZE_PARAMS* pParams = (NCCALCSIZE_PARAMS*)lParam;
             pParams->rgrc[0].top += margin;
@@ -93,11 +28,9 @@ LRESULT CALLBACK WindowCustomizer::CustomizerWndProc(HWND hWnd, UINT msg, WPARAM
             pParams->rgrc[0].right -= margin;
         }
         return 0;
-    }
     case WM_NCACTIVATE:
         return wParam ? 0 : 1;
-    case WM_NCPAINT:
-    {
+    case WM_NCPAINT: {
         // Получаем контекст устройства для неклиентской области
         HDC hdc = GetWindowDC(hWnd);
 
@@ -205,44 +138,6 @@ LRESULT CALLBACK WindowCustomizer::CustomizerWndProc(HWND hWnd, UINT msg, WPARAM
         ReleaseDC(hWnd, hdc);
         return 0;
     }
-        /*case WM_NCHITTEST:
-    {
-        // Обеспечиваем стандартное поведение рамки
-        POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
-        RECT rc;
-        GetWindowRect(hWnd, &rc);
-
-        // Определяем границы для ресайза (8 пикселей)
-        const int borderSize = 10;
-        const int topBorder = 10; // Верхняя граница тоньше
-
-        // Проверяем углы и границы
-        if (pt.y <= rc.top + topBorder)
-        {
-            if (pt.x <= rc.left + borderSize) return HTTOPLEFT;
-            if (pt.x >= rc.right - borderSize) return HTTOPRIGHT;
-            return HTTOP;
-        }
-        else if (pt.y >= rc.bottom - borderSize)
-        {
-            if (pt.x <= rc.left + borderSize) return HTBOTTOMLEFT;
-            if (pt.x >= rc.right - borderSize) return HTBOTTOMRIGHT;
-            return HTBOTTOM;
-        }
-        else if (pt.x <= rc.left + borderSize)
-        {
-            return HTLEFT;
-        }
-        else if (pt.x >= rc.right - borderSize)
-        {
-            return HTRIGHT;
-        }
-
-        // Верхние 30px для перемещения (как заголовок)
-        if (pt.y <= rc.top + 30) return HTCAPTION;
-
-        break;
-    }*/
     default:
         break;
     }
@@ -250,7 +145,7 @@ LRESULT CALLBACK WindowCustomizer::CustomizerWndProc(HWND hWnd, UINT msg, WPARAM
     //return DefWindowProc(hWnd, msg, wParam, lParam);
 }
 
-LRESULT CALLBACK WindowCustomizer::CallWndProc(int nCode, WPARAM wParam, LPARAM lParam)
+/*LRESULT CALLBACK WindowCustomizer::CallWndProc(int nCode, WPARAM wParam, LPARAM lParam)
 {
     qDebug() << nCode;
     switch (nCode) {
@@ -272,61 +167,44 @@ LRESULT CALLBACK WindowCustomizer::CallWndProc(int nCode, WPARAM wParam, LPARAM 
         break;
     }
     return 0;
-    //return CallNextHookEx(NULL, nCode, wParam, lParam);
-}
+}*/
+#endif
 
-/*// Получаем контекст устройства для неклиентской области
-HDC hdc = GetWindowDC(hWnd);
-
-// Получаем размеры неклиентской области
-RECT rc;
-GetWindowRect(hWnd, &rc);
-OffsetRect(&rc, -rc.left, -rc.top);
-
-// Рисуем кастомный заголовок
-int _margin = margin + 1;
-QImage srcImage(rc.right, rc.bottom, QImage::Format_ARGB32);
-srcImage.fill(Qt::transparent);
-QPainter srcPainter(&srcImage);
-srcPainter.fillRect(_margin, _margin, srcImage.width() - _margin * 2, srcImage.height() - _margin * 2,
-                    QColor(0, 0, 0, 180));
-srcPainter.end();
-
-//
-QImage destImage(srcImage.size(), QImage::Format_ARGB32);
-destImage.fill(Qt::transparent);
-QPainter Painter(&destImage);
-qt_blurImage(&blurPainter, srcImage, _margin, true, false);
-blurPainter.end();
-
-BITMAPINFO bmi;
-bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-bmi.bmiHeader.biWidth = rc.right;
-bmi.bmiHeader.biHeight = rc.bottom;  // Отрицательная высота для top-down изображения
-bmi.bmiHeader.biPlanes = 1;
-bmi.bmiHeader.biBitCount = 32;     // 32 бита на пиксель (RGBA)
-bmi.bmiHeader.biCompression = BI_RGB;
-
-// Создаем DIB-секцию
-HDC hdcMem = CreateCompatibleDC(hdc);
-void* pixelData;
-HBITMAP hBitmap = CreateDIBSection(hdc, &bmi, DIB_RGB_COLORS, &pixelData, NULL, 0);
-for (int x = 0; x < destImage.width(); ++x) {
-    for (int y = 0; y < destImage.height(); ++y) {
-        QRgb color = destImage.pixel(x, y);
-        float a = qAlpha(color) / 255.f;
-        a = (pow(1.f - a, 1) * (a - 1.f) + 1.f) * 255.f;
-        float r = qRed(color) * a / 255.0;
-        float g = qGreen(color) * a / 255.0;
-        float b = qBlue(color) * a / 255.0;
-        //unsigned long color = qRgba(255.0 * alpha / 255.0, 0, 0, alpha);
-        ((COLORREF*)pixelData)[y * rc.right + x] = qRgba(r, g, b, a);
+WindowCustomizer::WindowCustomizer(QObject *parent) : QObject(parent), m_window(nullptr) {
+#ifdef Q_OS_WINDOWS
+    if (!isWindowArranged) {
+        HMODULE hUser32 = GetModuleHandle(L"user32.dll");
+        if (hUser32) isWindowArranged = (PFN_ISWINDOWARRANGED)GetProcAddress(hUser32, "IsWindowArranged");
     }
+#endif
 }
-SelectObject(hdcMem, hBitmap);
-BitBlt(hdc, 0, 0, rc.right, rc.bottom, hdcMem, 0, 0, SRCCOPY);
-DeleteObject(hBitmap);
 
-// Освобождаем контекст устройства
-ReleaseDC(hWnd, hdc);
-return 0;*/
+void WindowCustomizer::setWindow(QWindow *window)
+{
+#ifdef Q_OS_WINDOWS
+    if (m_window == window) return;
+    m_window = window;
+    if (window) {
+        HWND hWnd = (HWND)window->winId();
+        //DWM
+        //DWMNCRENDERINGPOLICY policy = DWMNCRP_DISABLED;
+        //DwmSetWindowAttribute(hWnd, DWMWA_NCRENDERING_POLICY, &policy, sizeof(policy));
+        /*MARGINS margins;
+            margins.cyTopHeight = margin;
+            margins.cyBottomHeight = margin;
+            margins.cxLeftWidth = margin;
+            margins.cxRightWidth = margin;
+            DwmExtendFrameIntoClientArea(hWnd, &margins);*/
+        //
+        WndProc = (WNDPROC)GetWindowLongPtr(hWnd, GWLP_WNDPROC);
+        SetWindowLongPtr(hWnd, GWLP_WNDPROC, (LONG_PTR)CustomizerWndProc);
+        //RedrawWindow(hWnd, NULL, NULL, RDW_FRAME | RDW_INVALIDATE);
+        //MoveWindow(hWnd, window->x(), window->y(), window->width(), window->height(), true);
+        //SetWindowPos(hWnd, NULL, window->x(), window->y(), window->width(), window->height(),);
+    }
+#elif defined(Q_OS_LINUX)
+#elif defined(Q_OS_ANDROID)
+#elif defined(Q_OS_MACOS)
+#endif
+    emit windowChanged();
+}

@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import "../components"
 import "../modes/scratch"
 import "../modes/scratch/blocks"
+import "../modes/script"
 
 Item {
     id: root
@@ -38,6 +39,10 @@ Item {
         }
     }
     Component {
+        id: script
+        Script {}
+    }
+    Component {
         id: appsMenu
         RowLayout {
             spacing: 1
@@ -52,9 +57,11 @@ Item {
                 onClicked: setPage(scratch)
             }
             ModeButton {
+                //visible: false
                 text: "Скрипт"
                 icon.source: "qrc:/images/script.svg"
                 icon.width: 160; icon.height: 160
+                onClicked: setPage(script)
             }
         }
     }

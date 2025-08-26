@@ -13,7 +13,7 @@ T.ComboBox {
         radius: height / 2
         color: Style.darkWidgetColor
         border.width: 1
-        border.color: hovered ? Style.brightWidgetBorderColor : "#30FFFFFF" //"#90FFFFFF"
+        border.color: hovered ? Style.lightBorderColor : Style.brightBorderColor //"#30FFFFFF"
         Q.Behavior on border.color { Q.ColorAnimation { duration: 100 } }
     }
     contentItem: Text {
@@ -53,7 +53,7 @@ T.ComboBox {
                 when: highlightedIndex === index
                 Q.PropertyChanges {
                     target: highlight
-                    color: "#145FA5"
+                    color: Style.highlightBackgroundColor
                     //border.color: Style.brightWidgetBorderColor
                 }
             }

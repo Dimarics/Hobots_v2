@@ -3,7 +3,7 @@ import QtQuick.Shapes
 import QtQuick.Layouts
 import QtQuick.Effects
 
-AbstractBlock {
+BasicBlock {
     id: root
     default property alias content: layout.data
     property alias headerHeight: layout.height

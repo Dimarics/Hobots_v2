@@ -202,7 +202,7 @@ Item {
     Component.onCompleted: {
         function connectChildren(object) {
             for (let child of object.children) {
-                if (child instanceof AbstractBlock) {
+                if (child instanceof BasicBlock) {
                     child.dragStart.connect(dragHandler.createNewBlock)
                     child.canvas = canvas
                 }

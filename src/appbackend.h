@@ -1,6 +1,7 @@
 #ifndef APPBACKEND_H
 #define APPBACKEND_H
 
+#pragma once
 //#include <QObject>
 #include <QtQmlIntegration>
 #include <QQmlEngine>
@@ -11,22 +12,6 @@ class AppBackend : public QObject
     Q_OBJECT
     QML_ELEMENT
     QML_SINGLETON
-    /*
-     * currentDevice:
-     * availableDevices: [
-     *     "Хобот 1 Т3"
-     * ]
-     * window: {
-     *     x:
-     *     y:
-     *     width:
-     *     height:
-     *     visibility:
-     * }
-     * Хобот 1 Т3: {
-     *     protocol:
-     * }
-     */
     Q_PROPERTY(QString tempLocation READ tempLocation CONSTANT)
     Q_PROPERTY(QString appDataLocation READ appDataLocation CONSTANT)
     Q_PROPERTY(QString deviceName READ deviceName WRITE setDeviceName NOTIFY deviceNameChanged)
@@ -47,12 +32,15 @@ public:
     void setDevice(QObject *device);
     inline QObject *device() const { return m_device; }
     Q_INVOKABLE void saveFile(const QByteArray &data, const QString &path) const;
+    Q_INVOKABLE void saveFile(const QByteArray &data, const QUrl &url) const;
     //Q_INVOKABLE void saveSettings(const QString &data) const;
     //Q_INVOKABLE void saveDeviceSettings(const QString &data) const;
     Q_INVOKABLE QByteArray readFile(const QString &path) const;
+    Q_INVOKABLE QByteArray readFile(const QUrl &url) const;
     //Q_INVOKABLE QString readSettings() const;
     //Q_INVOKABLE QString readDeviceSettings() const;
     Q_INVOKABLE QVariant readJSON(const QString &path) const;
+    Q_INVOKABLE QVariant readJSON(const QUrl &url) const;
 
 private:
     QString m_deviceName;

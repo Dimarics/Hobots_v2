@@ -12,6 +12,11 @@ Window {
     default property alias data: content.data
     property Item content: content
     WindowCustomizer { window: window }
+    //anchors.fill: parent
+    Component.onCompleted: {
+        //Qt.createQmlObject("import Hobots; WindowCustomizer { }", this).window = window
+        //console.log(Screen.devicePixelRatio)
+    }
     MouseArea {
         // 47 x 28
         id: panel
@@ -20,6 +25,7 @@ Window {
         anchors.top: parent.top
         anchors.right: parent.right
         onPressed: window.startSystemMove()
+        visible: Qt.platform.os === "windows"
         Rectangle {
             anchors.fill: parent
             gradient: Gradient {
@@ -94,48 +100,47 @@ Window {
         id: separator
         height: 2
         anchors { top: panel.bottom; left: parent.left; right: parent.right }
-        color: Style.borderColor
+        color: Style.darkBorderColor
+        visible: Qt.platform.os === "windows"
     }
     Rectangle {
         id: content
         color: Style.lightWidgetColor
-        parent: window.contentItem
-        anchors { top: separator.bottom; bottom: window.contentItem.bottom; left: parent.left; right: parent.right }
-        /*Component.onCompleted: {
-            anchors.top = separator.bottom
-            anchors.bottom = parent.bottom
-            anchors.left = parent.left
-            anchors.right = parent.right
-        }*/
+        anchors {
+            top: Qt.platform.os === "windows" ? separator.bottom : parent.top;
+            bottom: parent.bottom;
+            left: parent.left;
+            right: parent.right
+        }
     }
     /*Rectangle {
-        color: "#00326E"
-        border.width: 2
-        border.color: "#142142"
-        anchors {
-            top: panel.bottom; bottom: parent.bottom; left: parent.left; right: parent.right
-            leftMargin: -border.width; rightMargin: -border.width - 1; bottomMargin: -border.width - 1
+            color: "#00326E"
+            border.width: 2
+            border.color: "#142142"
+            anchors {
+                top: panel.bottom; bottom: parent.bottom; left: parent.left; right: parent.right
+                leftMargin: -border.width; rightMargin: -border.width - 1; bottomMargin: -border.width - 1
+            }
+            Item {
+                id: content
+                anchors.fill: parent
+                anchors.margins: parent.border.width
+            }
         }
-        Item {
+        BorderRect {
             id: content
-            anchors.fill: parent
-            anchors.margins: parent.border.width
-        }
-    }
-    BorderRect {
-        id: content
-        backgroundColor: Style.lightWidgetColor
-        borderColor: Style.borderColor
-        borderTop: 2
-        anchors { top: panel.bottom; bottom: parent.bottom; left: parent.left; right: parent.right }
-    }*/
-    Item {
+            backgroundColor: Style.lightWidgetColor
+            borderColor: Style.borderColor
+            borderTop: 2
+            anchors { top: panel.bottom; bottom: parent.bottom; left: parent.left; right: parent.right }
+        }*/
+    /*Item {
         anchors.fill: parent
         focus: true
         PointHandler {
             onActiveChanged: if (active) parent.focus = true
         }
-    }
+    }*/
     /*Shortcut {
         sequence: "F11"
         onActivated: window.showFullScreen()

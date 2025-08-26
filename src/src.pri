@@ -4,6 +4,7 @@ include(modes/modes.pri)
 include(Hobot_L_type_3/Hobot_L_type_3.pri)
 
 INCLUDEPATH += $$PWD
+QML_IMPORT_PATH += $$PWD
 
 HEADERS += \
     $$PWD/appbackend.h \

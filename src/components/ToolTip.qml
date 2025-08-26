@@ -8,7 +8,7 @@ T.ToolTip {
     leftPadding: 4; rightPadding: 4; topPadding: 2; bottomPadding: 2
     background: Q.Rectangle {
         color: Style.darkWidgetColor
-        border.color: Style.brightWidgetBorderColor
+        border.color: Style.brightBorderColor
     }
     contentItem: Text {
         id: label

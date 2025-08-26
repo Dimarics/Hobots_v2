@@ -35,7 +35,7 @@ Socket {
     function value(): bool {
         return next ? next.value() : false
     }
-    function copy(block: AbstractBlock): BooleanSocket {
+    function copy(block): BooleanSocket {
         return Qt.createComponent("BooleanSocket.qml").createObject(null, { block: block })
     }
 }

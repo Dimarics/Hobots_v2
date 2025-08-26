@@ -1,9 +1,9 @@
-import QtQuick
+import QtQuick as Q
 import QtQuick.Layouts
 
-Item {
+Q.Item {
     id: root
-    height: exitButton.height + 30
+    default property alias content: layout.data
     property alias running: startButton.checked
     signal create
     signal open
@@ -14,10 +14,13 @@ Item {
     signal stop
     signal exit
     //signal startToggled: startButton.toggled
+    height: exitButton.height + 30
+    onStop: running = false
     Flickable {
+        id: flickable
         clip: true
         width: parent.width - exitButton.width - 30; height: parent.height
-        contentWidth: layout.implicitWidth + 15
+        contentWidth: Math.max(layout.implicitWidth, flickable.width)
         boundsMovement: width < contentWidth ? Flickable.FollowBoundsBehavior : Flickable.StopAtBounds
         RowLayout {
             id: layout
@@ -69,6 +72,7 @@ Item {
                 icon.width: 32; icon.height: 32
                 onClicked: stop()
             }
+            Q.Item { Layout.fillWidth: true }
         }
     }
     Button {

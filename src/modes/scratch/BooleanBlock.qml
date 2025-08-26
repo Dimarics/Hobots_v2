@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Shapes
 
-AbstractBlock {
+BasicBlock {
     id: root
     default property alias content: layout.data
     //property bool value: false

@@ -112,7 +112,7 @@ Socket {
         }
         return value
     }
-    function copy(block: AbstractBlock): ValueInput {
+    function copy(block) {
         var value_socket = Qt.createComponent("ValueInput.qml").createObject(block, { block: block })
         value_socket.text = textInput.text
         return value_socket

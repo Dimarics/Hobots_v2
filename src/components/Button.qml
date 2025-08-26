@@ -18,7 +18,7 @@ T.Button {
     borderColor: pressed ? Style.buttonPressedBorderColor :
                            hovered ? Style.buttonHoveredBorderColor : Style.buttonBorderColor
     width: 56; height: 56
-    hoverEnabled: true
+    hoverEnabled: Qt.platform.os !== "android"
     scale: pressed ? 0.95 : 1
     display: T.AbstractButton.TextUnderIcon
     icon.width: 40; icon.height: 40

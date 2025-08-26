@@ -1,7 +1,9 @@
 include($$PWD/blocks/blocks.pri)
 
+QML_IMPORT_PATH += $$PWD
+
 resources.files += \
-    $$PWD/AbstractBlock.qml \
+    $$PWD/BasicBlock.qml \
     $$PWD/BlocksPanel.qml \
     $$PWD/BooleanBlock.qml \
     $$PWD/BooleanSocket.qml \
@@ -16,3 +18,11 @@ resources.files += \
     $$PWD/ScratchWorkspace.qml \
     $$PWD/Socket.qml \
     $$PWD/StackBlock.qml
+
+INCLUDEPATH += $$PWD
+
+HEADERS += \
+    $$PWD/abstractblock.h
+
+SOURCES += \
+    $$PWD/abstractblock.cpp

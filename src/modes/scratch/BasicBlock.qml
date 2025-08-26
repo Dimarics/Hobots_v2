@@ -1,13 +1,11 @@
 import QtQuick
 import QtQuick.Shapes
-import QtQuick.Effects
+//import QtQuick.Effects
+import Hobots
 
-Item {
+AbstractBlock {
     id: root;
-    //Behavior on anchors.leftMargin { NumberAnimation { duration: 150 } }
-    property alias cursorShape: mouseArea.cursorShape
-    property real plugX: 0
-    property real plugY: 0
+    property real plugX: 0; property real plugY: 0
     property color borderColor
     property color fillColor
     property string type
@@ -16,27 +14,7 @@ Item {
     property Item canvas
     //property Component prototype
     property list<Socket> sockets
-    //property list<Item> content
-    //-----Тень-----
     property QtObject shadowObject: null
-    /*property Component shadow: MultiEffect {
-        z: root.z - 1
-        source: fill
-        anchors.fill: root
-        blurEnabled: true
-        blur: 1.0
-        brightness: -1
-    }*/
-    //--------------
-    signal dragStart(block: AbstractBlock)
-    signal dragMove(block: AbstractBlock)
-    signal dropped(block: AbstractBlock)
-    signal clicked(block: AbstractBlock)
-    containmentMask: fill
-    /*anchors.left: previous ? previous.block.left : undefined
-    anchors.top: previous ? previous.block.top : undefined
-    anchors.leftMargin: previous ? previous.touchX - plugX : undefined
-    anchors.topMargin: previous ? previous.touchY - plugY : undefined*/
     Shape {
         id: fill
         //visible: false
@@ -61,31 +39,32 @@ Item {
             Component.onCompleted: pathElements = shapePath.pathElements
         }
     }
-    MouseArea {
+    Component.onCompleted: containmentMask = fill
+    /*MouseArea {
         id: mouseArea
         anchors.fill: parent
         cursorShape: Qt.OpenHandCursor
         onPressed: mouse => { mouse.accepted = false; dragHandler.enabled = true }
         containmentMask: fill
-    }
+    }*/
     DragHandler {
         id: dragHandler
         property bool pressed: false
-        enabled: false
+        //enabled: false
         grabPermissions: PointerHandler.TakeOverForbidden
         onGrabChanged: function(transition, point) {
             //console.log(transition)
             switch (transition) {
             case PointerDevice.GrabPassive:
                 pressed = true
-                mouseArea.cursorShape = Qt.ClosedHandCursor
+                target.cursorShape = Qt.ClosedHandCursor
                 break
             case PointerDevice.UngrabPassive:
                 if (pressed) {
                     pressed = false
                     target.clicked(target)
                 }
-                mouseArea.cursorShape = Qt.OpenHandCursor
+                target.cursorShape = Qt.OpenHandCursor
                 break
             case PointerDevice.GrabExclusive:
                 pressed = false
@@ -94,17 +73,14 @@ Item {
                 dragStart(target)
                 target.Drag.hotSpot = point.pressPosition
                 target.Drag.start()
-                //target.setShadowEnabled(true)
                 break
             case PointerDevice.UngrabExclusive:
-                //target.dropped(target)
                 target.Drag.drop()
-                //target.setShadowEnabled(false)
                 target.cursorShape = Qt.OpenHandCursor
                 target = root
-                enabled = false
+                //enabled = false
                 break
-            default: enabled = false; break
+            //default: enabled = false; break
             }
         }
     }
@@ -143,7 +119,7 @@ Item {
             x = pos.x; y = pos.y
         }
     }
-    function clone(parent: Item): AbstractBlock {
+    function clone(parent: Item): BasicBlock {
         //var component = prototype ?? Qt.createComponent(objectName + ".qml")
         //var newBlock = Qt.createComponent("blocks/" + objectName + ".qml").createObject(parent ?? root.parent)
         var newBlock = Qt.createComponent("blocks/" + objectName + ".qml").createObject(parent ?? root.parent)
@@ -151,7 +127,7 @@ Item {
         copyData(newBlock)
         return newBlock
     }
-    /*function copy(parent: Item): AbstractBlock {
+    /*function copy(parent: Item): BasicBlock {
         var args = []
         var newBlock = Qt.createComponent("%1Block.qml".arg(objectName)).createObject(parent ?? root.parent)
         newBlock.borderColor = borderColor
@@ -186,7 +162,7 @@ Item {
         }*/
         target.setData(getData())
     }
-    function dragClone(parent: Item): AbstractBlock {
+    function dragClone(parent: Item): BasicBlock {
         var newBlock = clone(parent)
         dragHandler.target = newBlock
         newBlock.dragStart(newBlock)

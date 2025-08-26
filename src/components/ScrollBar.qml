@@ -3,6 +3,7 @@ import QtQuick.Controls.Basic as T
 
 T.ScrollBar {
     id: scrollBar
+    property alias color: slider.color
     policy: T.ScrollBar.AsNeeded
     rightPadding: orientation == Qt.Vertical ? 4 : 0
     bottomPadding: orientation == Qt.Horizontal ? 4 : 0
@@ -18,6 +19,7 @@ T.ScrollBar {
         return false
     }
     contentItem: Rectangle {
+        id: slider
         implicitWidth: 8
         implicitHeight: 8
         radius: 4

@@ -9,25 +9,17 @@ import "../../components"
 
 Item {
     id: workspace
-    property string path: App.tempLocation + App.device.objectName + "_scratch.json"
+    property alias canvasScale: canvas.scale
     property alias movement: blocksPanel.movement
     property alias controls: blocksPanel.controls
     property alias sensors: blocksPanel.sensors
     property ListModel variables: ListModel { dynamicRoles: true }
     clip: true
-    JsonSettings {
-        categories: [App.device.objectName, "Scratch"]
-        path: App.appDataLocation + "settings.json"
-        property alias scale: canvas.scale
-        property alias currentPath: workspace.path
-        onLoaded: workspace.open(currentPath)
-    }
-    Component.onDestruction: workspace.save(path)
     DropArea {
         id: dragHandler
         property Socket socket
         property StackBlock stackBlock
-        property AbstractBlock placeItem
+        property StackBlock placeItem
         //property list<AbstractBlock> blocks
         anchors.fill: parent
         //onEntered: (drag) => blockDragStart(drag.source)
@@ -158,8 +150,7 @@ Item {
             }
             //block.setShadowEnabled(false)
             //adjustZ()
-            adjustWidth()
-            adjustHeight()
+            adjustWidth(); adjustHeight()
         }
         function bestMatch(plugBlock) {
             let distance = Infinity
@@ -217,7 +208,13 @@ Item {
         }
         Image {
             id: background_image
-            property real drawScale: canvas.scale
+            property real side: 24 * canvas.scale
+            property real offsetX: 0
+            property real offsetY: 0
+            width: flickable.width + side * 2; height: flickable.height + side * 2
+            //x: -flickable.contentX % 24; y: -flickable.contentY % 24
+            x: flickable.contentX - (flickable.contentX - offsetX) % side - side
+            y: flickable.contentY - (flickable.contentY - offsetY) % side - side
             source: "qrc:/images/scratch_background.svg"
             smooth: false
             //mipmap: true
@@ -225,9 +222,8 @@ Item {
             horizontalAlignment: Image.AlignLeft
             verticalAlignment: Image.AlignTop
             transformOrigin: Item.TopLeft
-            sourceSize: Qt.size(24 * drawScale, 24 * drawScale)
+            sourceSize: Qt.size(side, side)
             //anchors.fill: parent
-            width: flickable.contentWidth + 48; height: flickable.contentHeight + 48
         }
         Item {
             id: canvas
@@ -326,9 +322,9 @@ Item {
             let dx = (children_width < flickable.width / 2 ? flickable.width - children_width : flickable.width / 2) - min_x
             for (let child of canvas.children) child.x += dx
             w = children_width < flickable.width / 2 ? flickable.width * 2 - children_width : flickable.width + children_width
-            background_image.x = (background_image.x + dx) % 24 - 24
-            flickable.contentX += dx * canvas.scale
-            //flickable.contentItem.x -= dx * canvas.scale
+            background_image.offsetX += dx * canvas.scale
+            //flickable.contentX += dx * canvas.scale
+            flickable.flick(dx * canvas.scale, 0)
         }
         canvas.width = w
     }
@@ -345,9 +341,9 @@ Item {
             let dy = (children_height < flickable.height / 2 ? flickable.height - children_height : flickable.height / 2) - min_y
             for (let child of canvas.children) child.y += dy
             h = children_height < flickable.height / 2 ? flickable.height * 2 - children_height : flickable.height + children_height
-            background_image.y = (background_image.y + dy) % 24 - 24
-            flickable.contentY += dy * canvas.scale
-            //flickable.contentItem.y -= dy * canvas.scale
+            background_image.offsetY += dy * canvas.scale
+            //flickable.contentY += dy * canvas.scale
+            flickable.flick(0, dy * canvas.scale)
         }
         canvas.height = h
     }
@@ -368,7 +364,6 @@ Item {
         adjustWidth(); adjustHeight()
     }
     function save(filePath) {
-        path = filePath
         var json = {
             "app": "Scratch",
             "device": App.device.objectName,
@@ -401,20 +396,19 @@ Item {
                 json.variables.push({"name": variable.name, "value": variable.value})
             }
         }
-        App.saveFile(JSON.stringify(json, null, 4), path)
+        App.saveFile(JSON.stringify(json, null, 4), scratch.currentFilePath)
     }
-    function open(filePath) {
+    function open(filePath: string): bool {
         clear()
-        if (!filePath) return
+        if (!filePath) return false
         const json = App.readJSON(filePath)
         if (!json) {
-            return
+            return false
         } else if (json.app !== "Scratch") {
-            console.error("Неверный формат"); return
+            console.error("Неверный формат"); return false
         } else if (json.device !== App.device.objectName) {
-            console.error("Этот файл предназначен для другого устройства"); return
+            console.error("Этот файл предназначен для другого устройства"); return false
         }
-        path = filePath
         flickable.contentX = json.contentX; flickable.contentY = json.contentY
         // заполнение переменными
         if (json.variables) {
@@ -438,28 +432,6 @@ Item {
             block.x = blockJSON.x; block.y = blockJSON.y
         }
         adjustWidth(); adjustHeight()
+        return true
     }
-    /*JsonSettings {
-        property alias contentX: flickable.contentX
-        property alias contentY: flickable.contentY
-        //canvasScale:
-        function save() {
-            var json = {}
-            json.block
-            //blocks: []
-            //variables: [{"name", "value"}]
-            for (let block of canvas.children) {
-                let blockJSON = { "name": block.objectName, "x": block.x, "y": block.y }
-                if (block.getData && block.getData()) blockJSON.data = block.getData()
-                // objectName
-                // block { name: "setJoint", data: [], children: [] }
-                for (let socket of block.sockets) {
-                    // if (socket.next) save(socket.next)
-                }
-            }
-        }
-        function load() {
-
-        }
-    }*/
 }

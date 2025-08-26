@@ -1,26 +1,24 @@
 import QtQuick
-import QtQuick.Controls.Basic
-import QtQuick.Shapes
 import QtQuick.Layouts
-import QtQuick.Effects
+import App
 import "../../components" as C
-//import Qt5Compat.GraphicalEffects
 
-Item {
+C.AppWidget {
     id: scratch
     property alias movement: workspace.movement
     property alias controls: workspace.controls
     property alias sensors: workspace.sensors
-    property AbstractBlock currentBlock
-    property list<AbstractBlock> topLevelBlocks
-    property list<AbstractBlock> blocksWithContent
-    signal exit
-    C.ToolBar {
-        id: toolBar
-        anchors { top: parent.top; left: parent.left; right: parent.right }
-        onOpen: workspace.open("D:/scratch.json")
-        onSave: workspace.save(workspace.path)
-        onSaveAs: workspace.save("D:/scratch.json")
+    property BasicBlock currentBlock
+    property list<BasicBlock> topLevelBlocks
+    property list<BasicBlock> blocksWithContent
+    defaultFilePath: App.tempLocation + App.device.objectName + "_scratch.json"
+    openNameFilters: ["Файлы JSON (*.json)"]
+    //onOpen: path => { if (workspace.open(path)) currentFilePath = path }
+    //onSave: path => { currentFilePath = path; workspace.save(path)}
+    Component.onDestruction: workspace.save(currentFilePath)
+    function open(path: string): bool { return workspace.open(path) }
+    function save(path: string) { workspace.save(path) }
+    toolBar: C.ToolBar {
         onClear: { workspace.clear(); stop() }
         onStartButtonToggled: {
             if (running) {
@@ -41,11 +39,17 @@ Item {
             }
         }
         onStop: scratch.stop()
-        onExit: scratch.exit()
+    }
+    C.JsonSettings {
+        categories: [App.device.objectName, "Scratch"]
+        path: App.appDataLocation + "settings.json"
+        property alias scale: workspace.canvasScale
+        property alias currentPath: scratch.currentFilePath
+        onLoaded: if (!workspace.open(currentPath)) currentPath = defaultFilePath
     }
     ScratchWorkspace {
         id: workspace
-        anchors { top: toolBar.bottom; bottom: parent.bottom; left: parent.left; right: parent.right }
+        anchors { top: scratch.toolBar.bottom; bottom: parent.bottom; left: parent.left; right: parent.right }
     }
     Connections {
         target: currentBlock
@@ -81,7 +85,6 @@ Item {
         }
         blocksWithContent = []
         topLevelBlocks = []
-        toolBar.running = false
         //console.log("stop")
     }
 }

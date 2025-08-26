@@ -1,17 +1,16 @@
 import QtQuick
 import QtQuick.Controls.Basic as T
 import QtQuick.Layouts
-import QtQuick.Shapes
+//import QtQuick.VectorImage
 import App
-import Hobots
+//import Hobots
 import "components" as C
-import "Hobot_L_type_3"
 
 CustomWindow {
     id: window
     width: 900
     height: 480
-    visibility: Window.Maximized
+    visibility: Qt.platform.os === "android" ? Window.FullScreen : Window.Maximized
     C.JsonSettings {
         id: settings
         path: App.appDataLocation + "settings.json"
@@ -24,36 +23,9 @@ CustomWindow {
         onLoaded: deviceBox.currentIndex = deviceBox.find(currentDevice)
     }
     Binding { settings.currentDevice: deviceBox.currentText }
-    /*Component.onCompleted: {
-        const settingsData = App.readSettings()
-        if (settingsData) {
-            try {
-                const settings = JSON.parse(settingsData)
-                if (settings.windowX) window.x = settings.windowX
-                if (settings.windowY) window.y = settings.windowY
-                if (settings.windowWidth) window.width = settings.windowWidth
-                if (settings.windowHeight) window.height = settings.windowHeight
-                if (settings.windowVisibility) window.visibility = settings.windowVisibility
-                if (settings.currentDevice) deviceBox.currentText = settings.currentDevice
-            } catch (error) {
-                console.error("Файл настроек повреждён", error)
-            }
-        } else {
-            console.log("файл настроек не обнаружен")
-        }
-    }
-    Component.onDestruction: {
-        var settings = {
-            windowX: window.x,
-            windowY: window.y,
-            windowWidth: window.width,
-            windowHeight: window.height,
-            windowVisibility: window.visibility
-        }
-        App.saveSettings(JSON.stringify(settings, null, 4))
-    }*/
     C.Flickable {
         id: toolBar
+        sliderColor: "white"
         //contentWidth: toolBarLayout.width > parent.width ? toolBarLayout.width : parent.width
         height: 90; width: parent.width
         contentWidth: toolBarLayout.width
@@ -197,7 +169,7 @@ CustomWindow {
             width: parent.width - 28; height: 28
             horizontalAlignment: Text.AlignHCenter
         }
-        Rectangle { width: 2; height: parent.height; color: C.Style.borderColor }
+        Rectangle { width: 2; height: parent.height; color: C.Style.darkBorderColor }
         Behavior on width { NumberAnimation { duration: 300 } }
         function setModel(url) {
             if (model) model.destroy()

@@ -30,6 +30,8 @@
         <file>images/scratch.svg</file>
         <file>images/script.svg</file>
         <file>images/repeat_arrow.svg</file>
+        <file>script/hobots.h</file>
+        <file>script/hobots.py</file>
     </qresource>
     <qresource prefix="/../QtExtras/qml"/>
 </RCC>

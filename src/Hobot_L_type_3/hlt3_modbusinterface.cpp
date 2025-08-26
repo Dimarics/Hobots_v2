@@ -1,5 +1,6 @@
 #include "hlt3_modbusinterface.h"
 #include <QTimer>
+
 HLT3_ModbusInterface::HLT3_ModbusInterface()
 {
     modbus()->setConnectionParameter(QModbusDevice::SerialBaudRateParameter, 57600);
@@ -11,7 +12,6 @@ HLT3_ModbusInterface::HLT3_ModbusInterface()
         readMultipleInput(1, A_ColorSensor_InputRGB, 30, [this](const QList<quint16> &args){ emit dataChanged(args); });
         //writeMultipleHoldings(1, 5, 2, {34, 56});
     });
-
 }
 
 void HLT3_ModbusInterface::rotateMotor(uint8_t id, bool dir, float speed)

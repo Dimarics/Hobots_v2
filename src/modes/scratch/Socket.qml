@@ -21,7 +21,7 @@ Item {
     property Item block: parent
     property Item next: null
     property list<QtObject> path
-    function distance(plugBlock: AbstractBlock): real {
+    function distance(plugBlock) {
         /*var worldX = block ? block.x + touchX : touchX
         var worldY = block ? block.y + touchY : touchY
         return Math.sqrt(Math.pow(worldX - plugBlock.x - plugBlock.plugX, 2) +
@@ -57,6 +57,6 @@ Item {
         }
     }
     Component.onCompleted: {
-        block instanceof AbstractBlock ? block.sockets.push(this) : console.log("Невозможно добавить сокет")
+        block instanceof BasicBlock ? block.sockets.push(this) : console.log("Невозможно добавить сокет")
     }
 }

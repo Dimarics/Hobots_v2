@@ -1,27 +1,17 @@
 #include "appbackend.h"
 
 AppBackend::AppBackend() : m_availableDevices {
-                               "Хобот L Т3",
-                               "empty"
+                               "Хобот L Т3"
                                },
     m_device(nullptr)
 {
     startTimer(200);
 }
 
-/*QObject *AppBackend::instance(QQmlEngine*, QJSEngine*) {
-    AppBackend *instance = new AppBackend;
-    return instance;
-}*/
-
-//QStringList AppBackend::availablePorts() const { return m_serialPorts; }
-
 void AppBackend::setAvailableDevices(const QStringList &availableDevices) {
     m_availableDevices = availableDevices;
     emit availableDevicesChanged();
 }
-
-//QStringList AppBackend::availableDevices() const { return m_availableDevices; }
 
 void AppBackend::setDevice(QObject *device)
 {
@@ -30,8 +20,6 @@ void AppBackend::setDevice(QObject *device)
     m_device = device;
     emit deviceChanged();
 }
-
-//QObject *AppBackend::device() const { return m_device; }
 
 void AppBackend::saveFile(const QByteArray &data, const QString &path) const
 {
@@ -46,23 +34,12 @@ void AppBackend::saveFile(const QByteArray &data, const QString &path) const
     file.write(data);
 }
 
-/*void AppBackend::saveSettings(const QString &data) const {
-    QString appDataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-    if (!QDir(appDataPath).exists()) QDir().mkpath(appDataPath);
-    saveFile(data, appDataPath + "/settings.json");
+void AppBackend::saveFile(const QByteArray &data, const QUrl &url) const
+{
+    saveFile(data, url.toLocalFile());
 }
-
-void AppBackend::saveDeviceSettings(const QString &data) const {
-    QString deviceDataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + '/' + m_device->objectName();
-    if (!QDir(deviceDataPath).exists()) QDir().mkpath(deviceDataPath);
-    saveFile(data, deviceDataPath + '/' + m_device->objectName() + ".json");
-}*/
-
 QByteArray AppBackend::readFile(const QString &path) const
 {
-    //if (!QDir(path).exists()) QDir().mkpath(path);
-    //QDir temp(QStandardPaths::writableLocation(QStandardPaths::TempLocation) + "/Hobots/");
-    //if (temp.exists()) temp.removeRecursively();
     QFile file(path);
     if (!file.open(QIODevice::ReadOnly)) {
         qWarning() << "Невозможно открыть файл";
@@ -71,13 +48,10 @@ QByteArray AppBackend::readFile(const QString &path) const
     return file.readAll();
 }
 
-/*QString AppBackend::readSettings() const {
-    return readFile(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/settings.json");
+QByteArray AppBackend::readFile(const QUrl &url) const
+{
+    return readFile(url.toLocalFile());
 }
-
-QString AppBackend::readDeviceSettings() const {
-    return readFile(QString(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/%1/%1.json").arg(m_device->objectName()));
-}*/
 
 QVariant AppBackend::readJSON(const QString &path) const
 {
@@ -91,6 +65,11 @@ QVariant AppBackend::readJSON(const QString &path) const
         qWarning() << error.errorString(); return {};
     }
     return json.toVariant();
+}
+
+QVariant AppBackend::readJSON(const QUrl &url) const
+{
+    return readJSON(url.toLocalFile());
 }
 
 void AppBackend::timerEvent(QTimerEvent*) {
