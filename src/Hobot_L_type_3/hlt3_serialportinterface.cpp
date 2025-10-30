@@ -19,8 +19,8 @@ HLT3_SerialPortInterface::HLT3_SerialPortInterface()
         //char c[] {0x3, 0x4, 0x5, 0x6, 0x7};
         sendPacket(GetStatePorts);
     });
-    connect(this, &HLT3_SerialPortInterface::connected, timer, [timer]{ timer->start(); });
-    connect(this, &HLT3_SerialPortInterface::disconnected, timer, &QTimer::stop);
+    //connect(this, &HLT3_SerialPortInterface::connected, timer, [timer]{ timer->start(); });
+    //connect(this, &HLT3_SerialPortInterface::disconnected, timer, &QTimer::stop);
     connect(serialPort(), &QIODevice::aboutToClose, timer, &QTimer::stop);
     /*connect(serialPort(), &QSerialPort::errorOccurred, this, [](QSerialPort::SerialPortError error){
         qDebug() << error;

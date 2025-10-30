@@ -1,23 +1,27 @@
 import QtQuick as Q
-import QtQuick.Controls.Basic as T
-import QtQuick.Layouts
+import QtQuick.Templates as T
 import QtQuick.Controls.impl
 
 T.ComboBox {
     id: root
+    //enabled: delegateModel && delegateModel.count > 1
     font.pointSize: Style.textSize
-    //leftPadding: 10
-    height: 30
-    Layout.preferredHeight: 30
+    implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
+                            implicitContentWidth + leftPadding + rightPadding)
+    //implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
+    //                         implicitContentHeight + topPadding + bottomPadding,
+    //                         implicitIndicatorHeight + topPadding + bottomPadding)
+    implicitHeight: 30
+
+    leftPadding: 12; rightPadding: 12; topPadding: 4; bottomPadding: 4
     background: Q.Rectangle {
         radius: height / 2
         color: Style.darkWidgetColor
         border.width: 1
-        border.color: hovered ? Style.lightBorderColor : Style.brightBorderColor //"#30FFFFFF"
+        border.color: enabled && hovered ? Style.lightBorderColor : Style.brightBorderColor //"#30FFFFFF"
         Q.Behavior on border.color { Q.ColorAnimation { duration: 100 } }
     }
     contentItem: Text {
-        leftPadding: 12
         rightPadding: root.indicator.width + root.spacing
         text: root.displayText
         font: root.font
@@ -42,6 +46,7 @@ T.ComboBox {
         required property var model
         required property int index
         width: Q.ListView.view.width; height: root.height
+        leftPadding: root.leftPadding
         contentItem: Text {
             text: delegate.model[root.textRole]
             color: Style.highlightTextColor
@@ -68,6 +73,10 @@ T.ComboBox {
         bottomPadding: 15
         padding: 0
         width: root.width
+        //implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
+        //                        contentWidth + leftPadding + rightPadding)
+        implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
+                                 contentHeight + topPadding + bottomPadding)
         contentItem: Q.ListView {
             clip: true
             implicitHeight: contentHeight

@@ -2,28 +2,23 @@
 include(src/src.pri)
 
 QT += quick \
-    serialport  serialbus
+    serialport serialbus
 
 CONFIG += c++17
 
 TARGET = Hobots
 CONFIG += qmltypes
 
-QML_IMPORT_PATH = $$PWD
+QML_IMPORT_PATH += $$PWD
 QML_IMPORT_NAME = Hobots
 QML_IMPORT_MAJOR_VERSION = 1
+QML_IMPORT_MINOR_VERSION = 0
 
 #resources.prefix = /$$TARGET
 RESOURCES += resources \
     resources.qrc
 
-#QML_IMPORT_PATH += qrc:/../QtExtras/qml
-
-#QML_DESIGNER_IMPORT_PATH = ../QtExtras
-
-qnx: target.path = /tmp/$$TARGET/bin
-else: unix:!android: target.path = /opt/$$TARGET/bin
-!isEmpty(target.path): INSTALLS += target
+#QML_DESIGNER_IMPORT_PATH += $$OUT_PWD/release
 
 win32: {
     RC_FILE = resources.rc
@@ -54,3 +49,6 @@ android {
     }
 }
 
+qnx: target.path = /tmp/$$TARGET/bin
+else: unix:!android: target.path = /opt/$$TARGET/bin
+!isEmpty(target.path): INSTALLS += target

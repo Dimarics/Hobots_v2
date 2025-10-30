@@ -3,10 +3,10 @@ import QtQuick.Controls.Basic as T
 import QtQuick.Layouts
 //import QtQuick.VectorImage
 import App
-//import Hobots
-import "components" as C
+import Hobots
+import Components as C
 
-CustomWindow {
+C.CustomWindow {
     id: window
     width: 900
     height: 480
@@ -22,7 +22,6 @@ CustomWindow {
         property string currentDevice
         onLoaded: deviceBox.currentIndex = deviceBox.find(currentDevice)
     }
-    Binding { settings.currentDevice: deviceBox.currentText }
     C.Flickable {
         id: toolBar
         sliderColor: "white"
@@ -42,8 +41,7 @@ CustomWindow {
                 borderRadius: height / 2
                 Layout.leftMargin: toolBarLayout.spacing
                 checkable: true
-                icon.width: 37
-                icon.height: 37
+                icon.width: 37; icon.height: 37
                 icon.source: checked ? "qrc:/images/plug_connected.svg" : "qrc:/images/plug_unconnected.svg"
             }
             C.ComboBox {
@@ -59,10 +57,14 @@ CustomWindow {
             }
             C.ComboBox {
                 id: deviceBox
-                //currentIndex: -1
+                currentIndex: -1
                 model: App.availableDevices
+                displayText: deviceBox.currentIndex === -1 ? "Выберите модель" : currentText
                 Layout.preferredWidth: 170
-                onCurrentTextChanged: setDevice(currentText)
+                onCurrentTextChanged: {
+                    setDevice(currentText)
+                    settings.currentDevice = currentText
+                }
             }
             Item { Layout.fillWidth: true }
             Rectangle {
@@ -88,9 +90,8 @@ CustomWindow {
             Item { Layout.fillWidth: true }
             Rectangle {
                 id: onlineStatus
-                property bool active
-                radius: 8
-                height: 35
+                property bool active: App.device && App.device.protocol && App.device.protocol.state === HobotInterface.Online
+                radius: 8; height: 35
                 color: C.Style.darkWidgetColor
                 Layout.preferredWidth: 80
                 border { width: 2; color: active ? C.Style.highlightTextColor : "red" }
@@ -114,6 +115,7 @@ CustomWindow {
             C.Button {
                 id: homeButton
                 icon.source: "qrc:/images/home.svg"
+                onClicked: App.device.goHome()
             }
             C.Button {
                 id: stopButton
@@ -132,6 +134,7 @@ CustomWindow {
                     font.bold: true
                     horizontalAlignment: Text.AlignHCenter
                 }
+                onClicked: App.device.stop()
             }
         }
     }
@@ -140,41 +143,6 @@ CustomWindow {
         color: C.Style.headerBackgroundColor
         width: parent.width; height: 28
         anchors.top: toolBar.bottom
-    }
-    /*C.BorderRect {
-        id: controlPanel
-        property Item model: Item { anchors.fill: parent; anchors.topMargin: 28; parent: controlPanel }
-        width: hideControlPanel.checked ? 0 : 450
-        Behavior on width { NumberAnimation { duration: 300 } }
-        borderLeft: 2
-        anchors { top: toolBar.bottom; right: parent.right; bottom: parent.bottom }
-        C.Text {
-            text: "Панель управления"
-            width: parent.width - 28; height: 28
-            horizontalAlignment: Text.AlignHCenter
-        }
-        function setModel(newModel) {
-            if (model) model.destroy()
-            model = newModel.createObject(root, { 'anchors.fill': controlPanelFrame, 'anchors.topMargin': 28 })
-        }
-    }*/
-    Item {
-        id: controlPanel
-        property Item model
-        visible: model
-        width: !visible || hideControlPanel.checked ? 0 : 450
-        anchors { top: toolBar.bottom; right: parent.right; bottom: parent.bottom }
-        C.Text {
-            text: "Панель управления"
-            width: parent.width - 28; height: 28
-            horizontalAlignment: Text.AlignHCenter
-        }
-        Rectangle { width: 2; height: parent.height; color: C.Style.darkBorderColor }
-        Behavior on width { NumberAnimation { duration: 300 } }
-        function setModel(url) {
-            if (model) model.destroy()
-            if (url) model = Qt.createComponent(url).createObject(controlPanel, { 'anchors.fill': controlPanelFrame, 'anchors.topMargin': 28 })
-        }
     }
     T.Button {
         id: hideControlPanel
@@ -189,7 +157,44 @@ CustomWindow {
             color: hideControlPanel.pressed ? "#32ffffff" : hideControlPanel.hovered ? "#1effffff" : "transparent"
             Behavior on color { ColorAnimation { duration: 100 } }
         }
+        // Анимация
+        onClicked: {
+            controlPanelAnimation.from = checked ? controlPanel.implicitWidth : 0
+            controlPanelAnimation.to = checked ? 0 : controlPanel.implicitWidth
+            controlPanelAnimation.start()
+        }
+        NumberAnimation {
+            id: controlPanelAnimation
+            target: controlPanel
+            property: "width"
+            duration: 300
+        }
         Behavior on icon.color { ColorAnimation { duration: 100 } }
+    }
+    Item {
+        id: controlPanel
+        property Item model: null
+        visible: model
+        implicitWidth: model ? model.implicitWidth : 0
+        width: !visible || hideControlPanel.checked ? 0 : implicitWidth
+        anchors { top: toolBar.bottom; right: parent.right; bottom: parent.bottom }
+        C.Text {
+            text: "Панель управления"
+            width: parent.width - 28; height: 28
+            horizontalAlignment: Text.AlignHCenter
+        }
+        Rectangle { width: 2; height: parent.height; color: C.Style.darkBorderColor }
+        C.Flickable {
+            id: controlPanelFlickable
+            anchors { fill: parent; topMargin: 28; leftMargin: 2}
+            contentWidth: width
+            contentHeight: Math.max(height, controlPanel.model ? controlPanel.model.implicitHeight : 0)
+        }
+        //Behavior on width { NumberAnimation { duration: 300 } }
+        function setModel(url) {
+            if (model) model.destroy()
+            if (url) model = Qt.createComponent(url).createObject(controlPanelFlickable.contentItem)
+        }
     }
     C.Text {
         id: appsHeader
@@ -200,10 +205,11 @@ CustomWindow {
             top: toolBar.bottom; left: parent.left; right: controlPanel.left
             rightMargin: hideControlPanel.checked ? hideControlPanel.width : 0
         }
+        Behavior on anchors.rightMargin { NumberAnimation { duration: 300 } }
     }
     C.Flickable {
         id: apps
-        property Item model
+        property Item model: null
         clip: true
         contentWidth: model ? model.width : 0; contentHeight: model ? model.height : 0
         boundsMovement: Flickable.StopAtBounds
@@ -213,29 +219,17 @@ CustomWindow {
             if (model) model.destroy()
             if (url) model = Qt.createComponent(url).createObject(apps.contentItem)
         }
-        /*Component.onCompleted: {
-            model.parent = apps.contentItem
-            model.width = Qt.binding(() => Math.max(model.implicitWidth, width))
-            model.height = Qt.binding(() => Math.max(model.implicitHeight, height))
-        }
-        onModelAppsChanged: {
-            model.parent = apps.contentItem
-            model.width = Qt.binding(() => Math.max(model.implicitWidth, width))
-            model.height = Qt.binding(() => Math.max(model.implicitHeight, height))
-        }*/
     }
-    //-----------------------------------------------------------------
     Connections {
         target: connectionButton
         function onToggled() {
             if (connectionButton.checked) {
-                //console.log(App.device.protocol)
-                if (App.device) {
-                    if ('portName' in App.device.protocol) App.device.protocol.portName = portBox.currentText
+                if (App.device && App.device.protocol) {
+                    if ('portName' in App.device.protocol)
+                        App.device.protocol.portName = portBox.currentText
                     App.device.protocol.connectDevice()
                 }
             } else {
-                onlineStatus.active = false
                 connectionButton.checked = false
                 if (App.device) App.device.protocol.disconnectDevice()
             }
@@ -243,17 +237,43 @@ CustomWindow {
     }
     Connections {
         target: App.device ? App.device.protocol : null
-        function onConnected() {}
-        function onDisconnected() {
-            onlineStatus.active = false
-            connectionButton.checked = false
+        function onStateChanged(state) {
+            if (state === HobotInterface.Unconnected) connectionButton.checked = false
         }
-        function onOnlineChanged(online) { onlineStatus.active = online }
+    }
+    Connections {
+        target: App.device ? App.device.protocol : null
+        function onErrorOccurred(error) {
+            if (error === HobotInterface.ConnectionError)
+                connectionButton.checked = false
+        }
     }
     function setDevice(deviceName) {
-        var appsUrl, controlPanelUrl, deviceUrl
+        var lib, appsUrl, controlPanelUrl, deviceUrl
         switch(deviceName) {
-        case "Хобот L Т3":
+        case "Хобот 1 М1":
+            lib = "Hobot_1_M1"
+            appsUrl = "qrc:/H1T1_Apps.qml"
+            deviceUrl = "qrc:/H1T1_Device.qml"
+            controlPanelUrl = "qrc:/H1T1_ControlPanel.qml"
+            break
+        case "Хобот 2":
+            lib = "Hobot_2"
+            appsUrl = "qrc:/H2_Apps.qml"
+            deviceUrl = "qrc:/H2_Device.qml"
+            controlPanelUrl = "qrc:/H2_ControlPanel.qml"
+            break
+        case "Хобот Д":
+            appsUrl = "Hobot_D/HD_Apps.qml"
+            deviceUrl = "Hobot_D/HD_Device.qml"
+            controlPanelUrl = "Hobot_D/HD_ControlPanel.qml"
+            break
+        case "Хобот L2":
+            deviceName = "Хобот L3"
+            //appsUrl = "Hobot_L_type_2/HLT2_apps.qml"
+            //deviceUrl = "Hobot_L_type_2/HLT2_device.qml"
+            //break
+        case "Хобот L3":
             appsUrl = "Hobot_L_type_3/HLT3_apps.qml"
             deviceUrl = "Hobot_L_type_3/HLT3_device.qml"
             break
@@ -263,10 +283,11 @@ CustomWindow {
             controlPanel.setModel(null)
             return
         }
+        if (App.loadModel(lib)) { console.log("load") }
         apps.setModel(appsUrl)
         controlPanel.setModel(controlPanelUrl)
+        App.deviceName = deviceName
         App.device = Qt.createComponent(deviceUrl).createObject(App)
-        App.device.objectName = deviceName
         App.device.protocolName = Qt.binding(()=>protocolBox.currentText)
     }
 }

@@ -1,11 +1,20 @@
 #include "appbackend.h"
 
 AppBackend::AppBackend() : m_availableDevices {
-                               "Хобот L Т3"
+                               "Хобот 1 М1",
+                               "Хобот 2",
+                               "Хобот Д",
+                               "Хобот L2",
+                               "Хобот L3"
                                },
+    m_model(new QLibrary(this)),
     m_device(nullptr)
 {
+#ifndef WASM_PLATFORM
     startTimer(200);
+#endif
+    //QLibrary lib("Hobot_1_M1");
+    //lib.load();
 }
 
 void AppBackend::setAvailableDevices(const QStringList &availableDevices) {
@@ -38,6 +47,7 @@ void AppBackend::saveFile(const QByteArray &data, const QUrl &url) const
 {
     saveFile(data, url.toLocalFile());
 }
+
 QByteArray AppBackend::readFile(const QString &path) const
 {
     QFile file(path);
@@ -72,6 +82,8 @@ QVariant AppBackend::readJSON(const QUrl &url) const
     return readJSON(url.toLocalFile());
 }
 
+#ifndef WASM_PLATFORM
+
 void AppBackend::timerEvent(QTimerEvent*) {
     const QList<QSerialPortInfo> new_list = QSerialPortInfo::availablePorts();
 
@@ -91,3 +103,22 @@ void AppBackend::timerEvent(QTimerEvent*) {
         emit availablePortsChanged();
     }
 }
+
+bool AppBackend::loadModel(const QString &path) const
+{
+    if (m_model->isLoaded()) {
+        if (path == m_model->fileName()) {
+            return true;
+        } else {
+            m_model->unload();
+        }
+    }
+    m_model->setFileName(path);
+    if (!m_model->load()) {
+        qWarning() << m_model->errorString();
+        return false;
+    }
+    return true;
+}
+
+#endif

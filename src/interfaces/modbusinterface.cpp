@@ -2,25 +2,13 @@
 #include <QSerialPort>
 #include "qdebug.h"
 
-ModbusInterface::ModbusInterface() : m_modbus(new QModbusRtuSerialClient(this))
+ModbusInterface::ModbusInterface() : m_protocol(Protocol(-1)), m_modbus(nullptr)
 {
     //quint16 num = 567;
     //quint8 data[2] { quint8(num), quint8(num >> 8) };
     //qDebug() << ((data[1] << 8) | data[0]) << *reinterpret_cast<quint16*>(data);
-    m_modbus->setConnectionParameter(QModbusDevice::SerialDataBitsParameter, 8);
-    m_modbus->setConnectionParameter(QModbusDevice::SerialStopBitsParameter, 1);
-    m_modbus->setConnectionParameter(QModbusDevice::SerialParityParameter, QSerialPort::NoParity);
-    connect(m_modbus, &QModbusDevice::errorOccurred, this, [this](QModbusDevice::Error error) {
-        if (error == QModbusDevice::ReplyAbortedError) {
-            if (m_modbus->state() == QModbusDevice::ConnectedState) m_modbus->disconnectDevice();
-            emit disconnected();
-        }
-    });
-    connect(m_modbus, &QModbusDevice::stateChanged, this, [this](QModbusDevice::State state) {
-        qDebug() << state;
-        if (state == QModbusDevice::ConnectedState)
-            qobject_cast<QSerialPort*>(m_modbus->device())->setDataTerminalReady(true);
-    });
+    //connect(this, &ModbusInterface::disconnected, this, [this]{ emit onlineChanged(false); });
+    connect(this, &HobotInterface::stateChanged, this, [this]{ setState(Online); });
 }
 
 void ModbusInterface::setPortName(const QString &newPortName) {
@@ -28,6 +16,44 @@ void ModbusInterface::setPortName(const QString &newPortName) {
     if (m_modbus->state() == QModbusDevice::ConnectedState) disconnectDevice();
     m_modbus->setConnectionParameter(QModbusDevice::SerialPortNameParameter, newPortName);
     emit portNameChanged();
+}
+
+void ModbusInterface::setProtocol(Protocol protocol)
+{
+    if (m_protocol == protocol) return;
+    QModbusClient *new_modbus_client = nullptr;
+    switch (protocol) {
+    case RTU:
+        new_modbus_client = new QModbusRtuSerialClient(this);
+        break;
+    case SoftAP: case LAN:
+        new_modbus_client = new QModbusTcpClient(this);
+        break;
+    default:
+        qDebug() << "не существующий тип протокола";
+        return;
+    }
+    if (m_modbus) m_modbus->deleteLater();
+    m_protocol = protocol;
+    m_modbus = new_modbus_client;
+    connect(m_modbus, &QModbusDevice::errorOccurred, this, [this](QModbusDevice::Error error) {
+        qDebug() << error;
+        if (error == QModbusDevice::ConnectionError || error == QModbusDevice::ReplyAbortedError) {
+            if (m_modbus->state() == QModbusDevice::ConnectedState) m_modbus->disconnectDevice();
+            setState(Unconnected);
+        }
+    });
+    connect(m_modbus, &QModbusDevice::stateChanged, this, [this](QModbusDevice::State state) {
+        qDebug() << state;
+        if (state == QModbusDevice::ConnectedState) {
+            if (auto serialPort = qobject_cast<QSerialPort*>(m_modbus->device())) {
+                serialPort->setDataTerminalReady(true);
+            }
+            setState(Connected);
+            writeSingleRegister(0, 0xFF00);
+        }
+    });
+    initModbus();
 }
 
 void ModbusInterface::connectDevice()
@@ -40,17 +66,46 @@ void ModbusInterface::connectDevice()
         emit disconnected();
     }*/
     if (m_modbus->state() == QModbusDevice::ConnectedState) return;
-    if (m_modbus->connectDevice()) {
-        emit connected();
-    } else {
+    if (!m_modbus->connectDevice()) {
         qDebug() << m_modbus->errorString();
-        emit disconnected();
+        //emit disconnected();
     }
 }
 
 void ModbusInterface::disconnectDevice()
 {
     m_modbus->disconnectDevice();
+}
+
+void ModbusInterface::initModbus() {
+    switch (m_protocol) {
+    case RTU:
+        m_modbus->setConnectionParameter(QModbusDevice::SerialDataBitsParameter, 8);
+        m_modbus->setConnectionParameter(QModbusDevice::SerialStopBitsParameter, 1);
+        m_modbus->setConnectionParameter(QModbusDevice::SerialParityParameter, QSerialPort::NoParity);
+        break;
+    case SoftAP:
+    case LAN:
+        m_modbus->setConnectionParameter(QModbusDevice::NetworkPortParameter, 8888);
+        break;
+    }
+}
+
+void ModbusInterface::writeSingleRegister(quint16 addr, quint16 value, qint8 id)
+{
+    if (m_modbus->state() != QModbusDevice::ConnectedState) return;
+    QModbusResponse response(QModbusPdu::WriteSingleRegister, QList<quint16>{addr, value});
+    qDebug() << response.data();
+    QModbusReply *reply = m_modbus->sendRawRequest(response, id);
+    if (reply->isFinished()) reply->deleteLater();
+    connect(reply, &QModbusReply::finished, reply, &QObject::deleteLater);
+    connect(reply, &QModbusReply::finished, reply, [reply]{
+        if (reply->error() == QModbusDevice::NoError) {
+            qDebug() << reply->rawResult();
+        } else {
+            qDebug() << reply->error();
+        }
+    });
 }
 
 void ModbusInterface::writeMultipleHoldings(qint8 id, quint16 start_addr, quint16 count, const QList<qint16> &values)

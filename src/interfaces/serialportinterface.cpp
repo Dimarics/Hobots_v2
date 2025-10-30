@@ -1,13 +1,18 @@
 #include "serialportinterface.h"
 #include "qdebug.h"
-#include "qthread.h"
+
 SerialPortInterface::SerialPortInterface() : m_serialPort(new QSerialPort(this)), timeout(new QTimer(this))
 {
     connect(m_serialPort, &QSerialPort::readyRead, this, &SerialPortInterface::readPort);
     connect(m_serialPort, &QSerialPort::errorOccurred, this, [this](QSerialPort::SerialPortError error) {
-        if (error == QSerialPort::ResourceError) {
-            if (m_serialPort->isOpen()) m_serialPort->close();
-            emit disconnected();
+        switch (error) {
+        case QSerialPort::DeviceNotFoundError:
+        case QSerialPort::PermissionError:
+        case QSerialPort::ResourceError:
+            disconnectDevice();
+            emit errorOccurred(HobotInterface::ConnectionError);
+            break;
+        default: break;
         }
     });
     //
@@ -45,44 +50,29 @@ void SerialPortInterface::setPortName(const QString &portName) {
     emit portNameChanged();
 }
 
-void SerialPortInterface::send(const QByteArray &message)
-{
-    if (m_queue.isEmpty()) {
-        m_serialPort->write(message);
-        timeout->start();
-    }
-    m_queue.append(message);
-    qDebug() << "out:" << message;
-}
-
 void SerialPortInterface::connectDevice()
 {
     if (m_serialPort->isOpen()) return;
     if (m_serialPort->open(QIODeviceBase::ReadWrite)) {
         m_serialPort->setDataTerminalReady(true);
-        emit connected();
+        setState(Connected);
     } else {
-        emit disconnected();
+        setState(Unconnected);
     }
 }
 
 void SerialPortInterface::disconnectDevice()
 {
-    m_serialPort->close();
-}
-
-void SerialPortInterface::readPort()
-{
-    char byte;
-    while (m_serialPort->getChar(&byte)) {
-        if (byte == '\n') {
-            //qDebug() << "input:" << m_buffer;
-            messageHandler(m_buffer);
-            m_buffer.clear();
-        } else if (byte != '\r') {
-            m_buffer += byte;
-        }
+    if (m_serialPort->isOpen()) {
+        m_serialPort->close();
+        setState(Unconnected);
     }
 }
 
-void SerialPortInterface::messageHandler(const QByteArray&) {}
+void SerialPortInterface::send(const QByteArray &message)
+{
+    m_serialPort->write(message);
+}
+
+void SerialPortInterface::readPort() {
+}

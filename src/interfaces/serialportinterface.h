@@ -21,7 +21,6 @@ public:
 
 protected:
     virtual void readPort();
-    virtual void messageHandler(const QByteArray &data);
 
 private:
     QByteArray m_buffer;

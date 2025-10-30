@@ -87,6 +87,9 @@ public:
     HLT3_ModbusInterface();
     Q_INVOKABLE void rotateMotor(uint8_t id, bool dir, float speed);
 
+protected:
+    void initModbus() override;
+
 signals:
     void dataChanged(const QList<quint16> &data);
 };

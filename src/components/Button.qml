@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Controls.Basic as T
 import QtQuick.Layouts
-import "qrc:/../QtExtras/qml"
 
 T.Button {
     id: root

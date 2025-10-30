@@ -1,10 +1,18 @@
 import QtQuick
-import QtQuick.Controls.Basic as T
+import QtQuick.Templates as T
 
 T.ScrollBar {
     id: scrollBar
     property alias color: slider.color
     policy: T.ScrollBar.AsNeeded
+
+    implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
+                            implicitContentWidth + leftPadding + rightPadding)
+    implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
+                             implicitContentHeight + topPadding + bottomPadding)
+    minimumSize: orientation === Qt.Horizontal ? height / width : width / height
+
+    padding: 2
     rightPadding: orientation == Qt.Vertical ? 4 : 0
     bottomPadding: orientation == Qt.Horizontal ? 4 : 0
     visible: {
@@ -20,8 +28,7 @@ T.ScrollBar {
     }
     contentItem: Rectangle {
         id: slider
-        implicitWidth: 8
-        implicitHeight: 8
+        implicitWidth: 8; implicitHeight: 8
         radius: 4
         color: "white"
         opacity: scrollBar.pressed ? 0.45 : scrollBar.hovered ? 0.3 : 0.2

@@ -24,4 +24,14 @@ QtObject {
     property color buttonPressedBackgroundColor: "#50FFFFFF"
     property color buttonPressedBorderColor: buttonPressedBackgroundColor
     property color buttonPressedTextColor: buttonHoveredTextColor
+
+    property color color_1: "#002346"
+    property color color_2: "#052D55"
+    property color color_3: "#00326E"
+    property color color_4: "#305A8A"
+    property color color_5: "#145FA5"
+    property color color_6: "#50A0F0"
+
+    property font font
+    font.family: "Arial"
 }

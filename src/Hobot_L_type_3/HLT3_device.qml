@@ -1,13 +1,22 @@
 import QtQuick
+import Components
 
-QtObject {
+HobotDevice {
     id: root
-    property string protocolName
-    property QtObject protocol: null
-    property list<string> availableProtocols: ["COM порт"]
     //property list<int> portStates
     property real speed
     property var data: []
+    availableFeatures: [
+        HobotDevice.Motors,
+        HobotDevice.Speed,
+        HobotDevice.RGB,
+        HobotDevice.LedStrip,
+        //HobotDevice.LineSensor,
+        HobotDevice.ColorSensor,
+        HobotDevice.TouchSensor,
+        HobotDevice.Sonar
+    ]
+    availableProtocols: ["COM порт"]
     onProtocolNameChanged: {
         var qml
         switch(protocolName) {

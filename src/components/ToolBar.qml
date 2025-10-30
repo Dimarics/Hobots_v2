@@ -3,19 +3,24 @@ import QtQuick.Layouts
 
 Q.Item {
     id: root
-    default property alias content: layout.data
-    property alias running: startButton.checked
+    default property alias extraContent: extraLayout.data
+    property bool processRun: true
+    //property alias running: startButton.checked
     signal create
     signal open
     signal save
     signal saveAs
     signal clear
     signal startButtonToggled
+    signal start
+    signal pause
+    signal resume
     signal stop
     signal exit
+    enum Status { NotRunning, Running, Paused }
+    property int status: ToolBar.NotRunning
     //signal startToggled: startButton.toggled
     height: exitButton.height + 30
-    onStop: running = false
     Flickable {
         id: flickable
         clip: true
@@ -60,19 +65,47 @@ Q.Item {
             }
             Button {
                 id: startButton
-                toolTip: checked ? "Старт" : "Пауза"
-                checkable: true
-                icon.source: checked ? "qrc:/images/pause.svg" : "qrc:/images/start.svg"
+                visible: processRun
+                toolTip: status === ToolBar.NotRunning ? "Старт" : status === ToolBar.Running ? "Пауза" : "Продолжить"
+                //checkable: true
+                icon.source: status === ToolBar.Running ? "qrc:/images/pause.svg" : "qrc:/images/start.svg"
                 icon.width: 32; icon.height: 32
-                onToggled: startButtonToggled()
+                /*onToggled: {
+                    startButtonToggled()
+                    checked ? start() : pause()
+                }*/
+                onClicked: {
+                    switch (status) {
+                    case ToolBar.NotRunning:
+                        status = ToolBar.Running
+                        start()
+                        break;
+                    case ToolBar.Running:
+                        status = ToolBar.Paused
+                        pause()
+                        break;
+                    case ToolBar.Paused:
+                        status = ToolBar.Running
+                        resume()
+                        break;
+                    }
+                }
             }
             Button {
+                visible: processRun
                 toolTip: "Стоп"
                 icon.source: "qrc:/images/stop.svg"
                 icon.width: 32; icon.height: 32
-                onClicked: stop()
+                onClicked: {
+                    status = ToolBar.NotRunning
+                    stop()
+                }
             }
-            Q.Item { Layout.fillWidth: true }
+            RowLayout {
+                id: extraLayout
+                spacing: layout.spacing
+                Layout.fillWidth: true
+            }
         }
     }
     Button {

@@ -1,0 +1,37 @@
+module Apps
+
+Scratch 1.0 scratch/Scratch.qml
+RotateMotor 1.0 scratch/blocks/RotateMotor.qml
+SetJoint 1.0 scratch/blocks/SetJoint.qml
+PinMode 1.0 scratch/blocks/PinMode.qml
+DigitalWrite 1.0 scratch/blocks/DigitalWrite.qml
+DigitalRead 1.0 scratch/blocks/DigitalRead.qml
+AnalogRead 1.0 scratch/blocks/AnalogRead.qml
+AnalogWrite 1.0 scratch/blocks/AnalogWrite.qml
+Delay 1.0 scratch/blocks/Delay.qml
+LineSensor 1.0 scratch/blocks/LineSensor.qml
+ColorSensor 1.0 scratch/blocks/ColorSensor.qml
+Sonar 1.0 scratch/blocks/Sonar.qml
+TouchSensor 1.0 scratch/blocks/TouchSensor.qml
+Sum 1.0 scratch/blocks/Sum.qml
+Diff 1.0 scratch/blocks/Diff.qml
+Multiply 1.0 scratch/blocks/Multiply.qml
+Divide 1.0 scratch/blocks/Divide.qml
+Random 1.0 scratch/blocks/Random.qml
+More 1.0 scratch/blocks/More.qml
+Less 1.0 scratch/blocks/Less.qml
+Equal 1.0 scratch/blocks/Equal.qml
+And 1.0 scratch/blocks/And.qml
+Or 1.0 scratch/blocks/Or.qml
+Not 1.0 scratch/blocks/Not.qml
+If 1.0 scratch/blocks/If.qml
+IfElse 1.0 scratch/blocks/IfElse.qml
+RepeatCount 1.0 scratch/blocks/RepeatCount.qml
+RepeatFor 1.0 scratch/blocks/RepeatFor.qml
+RepeatAll 1.0 scratch/blocks/RepeatAll.qml
+Variable 1.0 scratch/blocks/Variable.qml
+SetVariable 1.0 scratch/blocks/SetVariable.qml
+
+Script 1.0 script/Script.qml
+
+Rect 1.0 Rect.qml

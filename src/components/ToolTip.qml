@@ -5,10 +5,11 @@ T.ToolTip {
     id: root
     delay: 1000
     timeout: 5000
-    leftPadding: 4; rightPadding: 4; topPadding: 2; bottomPadding: 2
+    leftPadding: 6; rightPadding: 6; topPadding: 4; bottomPadding: 4
     background: Q.Rectangle {
         color: Style.darkWidgetColor
         border.color: Style.brightBorderColor
+        radius: 4
     }
     contentItem: Text {
         id: label

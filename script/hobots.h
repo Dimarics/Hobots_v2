@@ -18,7 +18,13 @@ void moveToZ(float value)
     std::cin.get();
 }
 
-void moveTo(float x, float y, float z)
+void moveToXY(float x, float y)
+{
+    std::cout << "moveTo " << x << " " << y;
+    std::cin.get();
+}
+
+void moveToXYZ(float x, float y, float z)
 {
     std::cout << "moveTo " << x << " " << y << " " << z;
     std::cin.get();

@@ -2,7 +2,9 @@ INCLUDEPATH += $$PWD
 
 resources.files += \
     $$PWD/HLT3_apps.qml \
-    $$PWD/HLT3_device.qml
+    $$PWD/HLT3_device.qml \
+    $$PWD/ScratchBlocks/ColorSensorRGB.qml \
+    $$PWD/ScratchBlocks/SonarRGB.qml
 
 HEADERS += \
     $$PWD/hlt3_modbusinterface.h \

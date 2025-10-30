@@ -10,16 +10,21 @@ def moveToZ(value):
     print("moveToZ", value)
     input()
 
-
-def moveToXYZ(x, y, z):
-    print("moveTo", x, y, z)
+def moveToXY(x, y):
+    print("moveToXY", x, y)
     input()
 
+def moveToXYZ(x, y, z):
+    print("moveToXYZ", x, y, z)
+    input()
+
+def setJoint(id, value):
+    print("setJoint", id, value)
+    input()
 
 def joint_1(value):
     print("joint_1", value)
     input()
-
 
 def joint_2(value):
     print("joint_2", value)

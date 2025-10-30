@@ -39,8 +39,8 @@ Q.Rectangle {
         //Q.Behavior on x { Q.NumberAnimation { duration: 300; easing.type: Q.Easing.InOutQuad } }
         Q.Behavior on x {
             enabled: false
-            Q.SmoothedAnimation { velocity: 400; easing.type: Q.Easing.InOutQuad }
             Q.Component.onCompleted: enabled = true
+            Q.SmoothedAnimation { velocity: 400; easing.type: Q.Easing.InOutQuad }
         }
     }
     RowLayout {
